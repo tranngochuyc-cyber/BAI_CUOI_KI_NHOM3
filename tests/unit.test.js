@@ -6,8 +6,8 @@ const test = require('node:test');
 const assert = require('node:assert');
 const path = require('node:path');
 
-const waste = require(path.join('..', 'assets', 'js', 'waste-reduction.js'));
-const listings = require(path.join('..', 'assets', 'js', 'post-listing.js'));
+const waste = require(path.join('..', 'js', 'logic', 'waste.js'));
+const listings = require(path.join('..', 'js', 'logic', 'listing.js'));
 
 const memStore = () => { let l = []; return { mode: 'memory', read: () => l.slice(), write: (x) => { l = x.slice(); return true; } }; };
 const TEST_RULE = { confirmed: true, unit: 'TEST_UNIT', requiredInputs: ['testValue'], compute: (i) => i.testValue };
@@ -100,7 +100,7 @@ test('rule thiếu unit hoặc requiredInputs -> vẫn NEED_CONFIRMATION', () =>
 });
 
 test('validate form: hợp lệ', () => {
-  const e = listings.validate({ title: 'Ghế gỗ', description: 'Còn tốt', condition: 'Good', exchangeType: 'Give', image: null }, []);
+  const e = listings.validate({ title: 'Ghế gỗ', description: 'Còn tốt, chân chắc chắn', condition: 'Good', exchangeType: 'Give', image: null }, []);
   assert.deepStrictEqual(e, {});
 });
 
@@ -122,15 +122,31 @@ test('buildListing: ảnh chỉ là metadata giả lập, uploaded=false', () =>
 });
 
 test('validate form: khoảng cách không bắt buộc, nếu nhập phải là số >= 0', () => {
-  const base = { title: 'a', description: 'b', condition: 'Good', exchangeType: 'Give', image: null };
+  const base = { title: 'Ghế gỗ', description: 'Mô tả đủ mười ký tự', condition: 'Good', exchangeType: 'Give', image: null };
   assert.deepStrictEqual(listings.validate(Object.assign({}, base, { distance: '' }), []), {});
   assert.deepStrictEqual(listings.validate(Object.assign({}, base, { distance: '0' }), []), {});
   assert.ok(listings.validate(Object.assign({}, base, { distance: '-1' }), []).distance);
   assert.ok(listings.validate(Object.assign({}, base, { distance: 'abc' }), []).distance);
+  assert.ok(listings.validate(Object.assign({}, base, { distance: '101' }), []).distance);
 });
 
 test('buildListing: lưu khoảng cách là số khi có nhập, bỏ qua khi để trống', () => {
   const base = { title: 'a', description: 'b', condition: 'Good', exchangeType: 'Give', image: null };
   assert.strictEqual(listings.buildListing(Object.assign({}, base, { distance: '2.5' }), []).distance, 2.5);
   assert.strictEqual(listings.buildListing(Object.assign({}, base, { distance: '' }), []).distance, undefined);
+});
+
+test('validate form: định dạng tên/mô tả quá ngắn, ảnh quá lớn, danh mục bắt buộc', () => {
+  const ok = { title: 'Ghế gỗ', description: 'Mô tả đủ mười ký tự', condition: 'Good', exchangeType: 'Sell', image: null, category: 'Nội thất' };
+  assert.ok(listings.validate(Object.assign({}, ok, { title: 'ab' }), []).title);
+  assert.ok(listings.validate(Object.assign({}, ok, { description: 'ngắn' }), []).description);
+  assert.ok(listings.validate(Object.assign({}, ok, { image: { name: 'a.png', type: 'image/png', size: 6 * 1024 * 1024 } }), []).image);
+  assert.ok(listings.validate(Object.assign({}, ok, { category: '' }), ['Nội thất']).category);
+  assert.deepStrictEqual(listings.validate(ok, ['Nội thất']), {});
+});
+
+test('buildListing: lưu ảnh thu nhỏ (chỉ trên trình duyệt) nhưng vẫn uploaded=false', () => {
+  const l = listings.buildListing({ title: 'Ghế gỗ', description: 'Mô tả đủ mười ký tự', condition: 'Good', exchangeType: 'Give', image: { name: 'p.jpg', type: 'image/jpeg', size: 10, thumbnail: 'data:image/jpeg;base64,AA' } }, []);
+  assert.strictEqual(l.image.uploaded, false);
+  assert.strictEqual(l.image.thumbnail, 'data:image/jpeg;base64,AA');
 });
