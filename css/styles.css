@@ -495,3 +495,155 @@ textarea {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* =========================================================================
+   Nâng cấp giao diện (polish) — chỉ thêm hiệu ứng và chỉnh chi tiết, không đổi
+   màu chủ đạo, logo hay bố cục. Hiệu ứng cuộn dùng animation-timeline (Chrome,
+   Edge, Safari mới); trình duyệt chưa hỗ trợ thì bỏ qua, trang vẫn đầy đủ.
+   ========================================================================= */
+
+html {
+  scroll-padding-top: 92px; /* tránh header dính che mất tiêu đề khi nhảy tới #new-items */
+}
+
+::selection {
+  background: #cfe8d5;
+  color: var(--color-ink);
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Nút: phản hồi khi nhấn */
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Thẻ sản phẩm: cao bằng nhau, nút luôn nằm đáy thẻ, ảnh phóng nhẹ khi rê chuột */
+.product-card__body > .product-card__meta {
+  margin-bottom: 12px;
+}
+
+.product-card__action,
+.product-card__done {
+  margin-top: auto;
+}
+
+.product-card__image {
+  background: var(--color-primary-soft);
+  transition: transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.product-card:hover .product-card__image {
+  transform: scale(1.06);
+}
+
+.product-card:focus-within {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card);
+}
+
+/* Menu: gạch chân trượt khi rê chuột vào mục chưa chọn */
+.site-nav__link:not(.site-nav__link--active)::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 220ms ease;
+}
+
+.site-nav__link:not(.site-nav__link--active):hover::after,
+.site-nav__link:not(.site-nav__link--active):focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* Trang chủ: chữ nhấn có dải xanh chuyển sắc, nền hero có vầng sáng nhẹ */
+.hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  width: min(560px, 80%);
+  height: 420px;
+  background: radial-gradient(circle at 55% 45%, rgba(123, 196, 127, 0.18), transparent 66%);
+  content: "";
+  pointer-events: none;
+}
+
+.hero h1 span {
+  background: linear-gradient(90deg, var(--color-primary-dark), #3f9a63);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hiệu ứng theo cuộn trang */
+@supports (animation-timeline: view()) {
+  @keyframes cee-reveal {
+    /* Chỉ dịch chuyển nhẹ, KHÔNG ẩn nội dung (opacity) để in/chụp/đọc bằng công cụ khác vẫn thấy đủ */
+    from {
+      transform: translateY(20px);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes cee-header-shadow {
+    from {
+      box-shadow: 0 0 0 rgba(25, 59, 43, 0);
+    }
+    to {
+      box-shadow: 0 8px 24px rgba(25, 59, 43, 0.08);
+    }
+  }
+
+  .stat-card,
+  .how-step,
+  .section-heading,
+  .product-card,
+  .chip-list {
+    animation: cee-reveal linear backwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 35%;
+  }
+
+  .site-header {
+    animation: cee-header-shadow linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 90px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-card,
+  .how-step,
+  .section-heading,
+  .product-card,
+  .chip-list,
+  .site-header {
+    animation: none !important;
+  }
+
+  .product-card:hover .product-card__image {
+    transform: none;
+  }
+}
