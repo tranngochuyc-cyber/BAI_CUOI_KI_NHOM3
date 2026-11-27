@@ -1,44 +1,42 @@
-# Báo cáo kiểm tra (cập nhật 27/11/2026)
+# Báo cáo kiểm thử (cập nhật 27/11/2026)
 
 ## Môi trường
 
-- Node.js 22; Google Chrome thật điều khiển bằng Playwright (Python); máy chủ tĩnh `python3 -m http.server`.
-- Kiểm tra toàn bộ site đã ghép (3 trang), không còn kiểm tra riêng từng phần.
+- Node.js 22 (unit test).
+- Google Chrome thật điều khiển bằng Playwright (Python), chạy **2 cách mở website**: qua máy chủ tĩnh (`http://`) và mở trực tiếp file HTML (`file://`).
+- 3 kích thước màn hình: 375 px (điện thoại), 768 px (máy tính bảng), 1280 px (máy tính).
 
 ## Cách chạy lại
 
 ```bash
-node --test tests/*.test.js            # test logic (Node)
-python3 demo-server.py                 # terminal 1, ở thư mục gốc repo (cổng 8000)
-python3 tests/e2e_check.py             # terminal 2; đặt CEE_CHROME nếu cần chỉ Chrome cụ thể
+node --test tests/*.test.js                 # 38 test logic
+python -m http.server 8765                  # terminal 1, ở thư mục gốc repo
+python tests/e2e_check.py                   # terminal 2: 88 kiểm tra (44 qua http + 44 qua file://)
 ```
 
-## Kết quả đã chạy
+## Kết quả
 
-| Hạng mục | Trạng thái | Ghi chú |
+| Nhóm kiểm tra | Nội dung | Kết quả |
 |---|---|---|
-| Test Node: lọc/tìm kiếm (AI 2), validate form và quy tắc ghi nhận giao dịch (AI 3) | PASS | 30/30 |
-| Trang chủ lần đầu: 6 tin có nhãn “Tin demo”, thống kê 0 kg kèm dòng giả định | PASS | e2e |
-| Nút xác nhận giao dịch: ghi một lần, thẻ đổi trạng thái, Trang chủ tự cập nhật (12 kg → 13,5 kg), tải lại không cộng trùng | PASS | e2e |
-| Đặt lại dữ liệu demo: về 0 kg, xóa tin tự đăng | PASS | e2e |
-| Mở bằng file:// hiện cảnh báo hướng dẫn | PASS | xem ảnh chụp |
-| `chay-demo.bat` trên Windows thật | NOT RUN | đã thử `demo-server.py` trên Linux, `.js` trả đúng `text/javascript` |
-| Đăng tin: form rỗng báo đủ lỗi và không lưu; 3 loại Give/Sell/Exchange; 3 tình trạng | PASS | e2e |
-| Ảnh giả lập: chỉ lưu metadata (`mock: true`, `uploaded: false`), không có request mạng | PASS | e2e |
-| Đăng tin không ghi vào sổ rác thải | PASS | e2e |
-| Trang chủ hiển thị tin mới nhất lên đầu, badge đúng nhãn | PASS | e2e |
-| Danh mục: tìm kiếm không dấu, lọc danh mục, lọc khoảng cách, kết hợp, trạng thái rỗng, Enter không tải lại | PASS | e2e |
-| Giao dịch chưa xác nhận bị từ chối | PASS | e2e |
-| Dữ liệu `localStorage` có bản ghi hỏng không làm vỡ Trang chủ | PASS | chạy thủ công 1 lần, không nằm trong `e2e_check.py` |
-| Không cuộn ngang ở 375px (3 trang); không lỗi console; không request ra ngoài | PASS | e2e |
-| Xem ảnh chụp desktop và mobile của 3 trang | PASS | xem bằng mắt |
-| Firefox, Safari, thiết bị thật, trình đọc màn hình | NOT RUN | |
-| Đo độ tương phản màu bằng công cụ chuyên dụng | NOT RUN | |
-| Chạy trên GitHub Pages sau khi đẩy code | NOT RUN | |
-| Con số rác thải theo công thức chính thức | BLOCKED | Đang dùng giả định minh họa có ghi nhãn (README mục 11) |
-| Quy trình giao dịch thật (bên mua/bán) | BLOCKED | Đề không mô tả; demo dùng nút xác nhận trên thẻ (README mục 11) |
+| Logic lọc (Nhật) | Tìm không dấu, lọc danh mục / tình trạng / loại hình / khoảng cách, kết hợp AND, sắp xếp mới nhất / gần nhất, không sửa mảng gốc | PASS |
+| Logic đăng tin (Khoa) | Bắt buộc 5 trường; tên ≥ 3 ký tự, mô tả ≥ 10 ký tự; khoảng cách 0–100; file phải là ảnh ≤ 5 MB; ảnh `uploaded = false` | PASS |
+| Logic rác thải (Khoa) | Chỉ ghi khi `transactionConfirmed === true`; chống trùng; chỉ nhận Give/Sell/Exchange; thiếu dữ liệu → không hiện số | PASS |
+| Trang chủ | 8 tin mới có nhãn "Tin demo"; widget 0 kg; badge Like new/Good/Fair + Tặng/Bán/Đổi; thẻ semantic; lối tắt danh mục | PASS |
+| Đăng tin | Form rỗng báo 5 lỗi, ô đỏ, focus ô đầu; lỗi định dạng hiện ngay khi gõ và biến mất khi sửa đúng; từ chối file không phải ảnh; ảnh xem trước; tin vừa đăng hiện ngay; đăng tin không cộng rác thải | PASS |
+| Danh mục | 11 sản phẩm; tìm real-time; từng bộ lọc và kết hợp; thông báo khi không có kết quả; nút Xóa bộ lọc; sắp xếp; mở sẵn lọc qua URL | PASS |
+| Giao dịch | Thẻ chuyển "Đã giao dịch" kèm kg ước tính; Trang chủ ở **tab khác tự cập nhật** 12 kg; xác nhận thêm → 13 kg và biểu đồ 2 danh mục; tải lại không cộng trùng | PASS |
+| Đặt lại demo | Về 0 kg, còn 8 tin demo | PASS |
+| Responsive | 3 trang × 3 kích thước không cuộn ngang | PASS |
+| Console | 0 lỗi, 0 request ra ngoài (cả `http://` và `file://`) | PASS |
 
-## Giới hạn
+**Tổng:** 38/38 unit test PASS · 88/88 kiểm tra trình duyệt PASS.
 
-- Ngoài 6 tin demo có nhãn trong `cee-config.js`, dữ liệu e2e do bài test tự đăng qua form và mất sau mỗi lần chạy (profile trình duyệt mới).
-- Công thức rác thải không được kiểm tra vì chưa xác nhận; chỉ kiểm tra cơ chế ghi nhận/cộng tổng bằng quy tắc test trong `tests/unit.test.js` (không phải công thức dự án).
+## Lỗi đã phát hiện và sửa trong quá trình kiểm thử
+
+1. **Mở file trực tiếp không có dữ liệu:** ES module bị trình duyệt chặn với `file://`. Đã chuyển sang script thường + namespace `window.CEE`.
+2. **Mất cú bấm ở trang Danh mục:** ô tìm kiếm mất focus phát sự kiện `change`, lưới bị vẽ lại đúng lúc bấm nút. Đã sửa để chỉ vẽ lại khi điều kiện lọc thay đổi (`js/ui/category.js`, hàm `update`).
+
+## Chưa kiểm tra (NOT RUN)
+
+- Firefox, Safari, thiết bị thật, trình đọc màn hình.
+- GitHub Pages sau khi merge vào `main`.

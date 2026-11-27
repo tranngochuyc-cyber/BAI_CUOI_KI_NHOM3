@@ -1,3 +1,5 @@
+> **Tài liệu lịch sử:** đây là README phân công ban đầu (mục 1–7) và nhật ký tích hợp các giai đoạn trước (mục 8–11), giữ lại làm minh chứng quá trình. Đường dẫn file trong mục 8–11 là cấu trúc cũ (`assets/css`, `assets/js`). Cấu trúc hiện tại xem `README.md` và `docs/thiet-ke.md`.
+
 # Circular Economy Exchange — Sàn trao đổi Đồ cũ & Tái chế
 
 > README này được viết lại theo đúng nội dung trong ảnh yêu cầu môn học. Phạm vi triển khai được chia thành 3 phần độc lập để 3 thành viên sử dụng 3 AI khác nhau làm song song. Đây là tài liệu phân công và đặc tả, không phải xác nhận dự án đã hoàn thành hoặc đã kiểm thử.
