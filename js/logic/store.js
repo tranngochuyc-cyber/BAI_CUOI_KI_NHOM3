@@ -34,7 +34,9 @@
       category: listing.category || "Khác",
       exchangeType: listing.exchangeType,
       createdAt: listing.createdAt,
-      imageUrl: typeof thumb === "string" && thumb.indexOf("data:image/") === 0 ? thumb : null,
+      imageUrl: typeof thumb === "string" && thumb.indexOf("data:image/") === 0
+        ? thumb
+        : (isDemo === true && typeof listing.imageSrc === "string" && listing.imageSrc.indexOf("./assets/images/") === 0 ? listing.imageSrc : null),
       distance: hasDistance ? { value: d, unit: data.distanceUnit } : null,
       isDemo: isDemo === true,
     };
