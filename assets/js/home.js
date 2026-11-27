@@ -9,6 +9,9 @@ import {
   readCommunityWasteTotal,
 } from "./cee-integration.js";
 
+// Số mặt hàng mới nhất hiển thị trên Trang chủ; toàn bộ danh sách xem ở trang Danh mục.
+const LATEST_LIMIT = 6;
+
 const productContainer = document.querySelector("#latest-products");
 const wasteValue = document.querySelector("#community-waste-value");
 const wasteNote = document.querySelector("#community-waste-note");
@@ -45,7 +48,7 @@ async function refreshProducts() {
     return;
   }
 
-  renderProductGrid(productContainer, latest);
+  renderProductGrid(productContainer, latest.slice(0, LATEST_LIMIT));
 }
 
 function formatCommunityTotal(summary) {

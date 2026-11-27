@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Tìm kiếm và lọc đồ cũ theo danh mục, khoảng cách - Circular Economy Exchange.">
+  <link rel="icon" href="data:,">
+  <title>Danh mục sản phẩm | Circular Economy Exchange</title>
+  <link rel="stylesheet" href="./assets/css/tokens.css">
+  <link rel="stylesheet" href="./assets/css/layout.css">
+  <link rel="stylesheet" href="./assets/css/product-grid.css">
+  <link rel="stylesheet" href="./assets/css/category.css">
+  <script src="./assets/js/cee-config.js"></script>
+  <script src="./assets/js/waste-reduction.js"></script>
+  <script src="./assets/js/post-listing.js"></script>
+  <script src="./assets/js/cee-data.js"></script>
+  <script src="./assets/js/category-filter.js"></script>
+  <script type="module" src="./assets/js/category-page.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
+
+  <header class="site-header">
+    <div class="site-header__inner page-shell">
+      <a class="brand" href="./index.html" aria-label="Circular Economy Exchange - Trang chủ">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" focusable="false">
+            <path d="M25.4 12.2A10.4 10.4 0 0 0 7.2 8.1L5.6 10" />
+            <path d="M5.6 5.2V10h4.8" />
+            <path d="M6.6 19.8a10.4 10.4 0 0 0 18.2 4.1l1.6-1.9" />
+            <path d="M26.4 26.8V22h-4.8" />
+          </svg>
+        </span>
+        <span class="brand__text">
+          <strong>Circular Exchange</strong>
+          <span>TRAO ĐỔI · TÁI SỬ DỤNG</span>
+        </span>
+      </a>
+
+      <nav class="site-nav" aria-label="Điều hướng chính">
+        <a class="site-nav__link" href="./index.html">Trang chủ</a>
+        <a class="site-nav__link site-nav__link--active" href="./category.html" aria-current="page">Danh mục sản phẩm</a>
+        <a class="site-nav__link" href="./post.html">Đăng tin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="page-shell category-page">
+    <div class="category-heading">
+      <h1 class="page-title">Danh mục sản phẩm</h1>
+      <p class="page-intro">Tìm kiếm và lọc đồ cũ theo danh mục hoặc khoảng cách.</p>
+    </div>
+
+    <form id="filter-form" class="category-filters" role="search">
+      <label>
+        Tìm kiếm
+        <input type="search" id="search-input" placeholder="Tên hoặc mô tả sản phẩm">
+      </label>
+      <label>
+        Danh mục
+        <select id="category-select">
+          <option value="">Tất cả danh mục</option>
+        </select>
+      </label>
+      <label>
+        <span id="distance-label">Khoảng cách tối đa</span>
+        <input type="number" id="distance-input" min="0" step="any" placeholder="Không giới hạn">
+      </label>
+    </form>
+
+    <p id="result-status" class="result-status" role="status" aria-live="polite"></p>
+
+    <!-- Product Grid dùng chung của AI 1 (assets/js/product-grid.js). AI 2 không tự dựng card. -->
+    <div id="product-grid" class="product-grid" role="list" aria-label="Kết quả tìm kiếm" aria-busy="false"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="page-shell site-footer__inner">
+      <span>Circular Economy Exchange</span>
+      <span>Kéo dài vòng đời sản phẩm, giảm lãng phí.</span>
+    </div>
+  </footer>
+</body>
+</html>

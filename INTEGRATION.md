@@ -2,12 +2,13 @@
 
 ## 1. Phạm vi và tình trạng tích hợp
 
-Gói này chỉ chứa phần AI 1. Thư mục được tạo độc lập vì trong phiên làm việc chỉ có `README.md`, không có mã nguồn hiện tại của dự án để xác định cấu trúc hoặc ghép vào ứng dụng mà không có nguy cơ ghi đè phần của AI 2/AI 3.
+Cập nhật 27/11/2026: ba phần đã được ghép trong cùng một site tĩnh (xem README mục 8).
 
-- AI 1 sở hữu: `index.html`, `assets/css/home.css`, `assets/css/product-grid.css`, `assets/css/tokens.css`, `assets/js/home.js`, `assets/js/product-grid.js`, `assets/js/cee-integration.js`.
-- AI 2 chỉ tái sử dụng `product-grid.js` và `product-grid.css`; không tạo một Product Grid khác.
-- Nguồn dữ liệu sản phẩm phải là nguồn dùng chung cho cả Trang chủ và Trang Danh mục; **chủ sở hữu repository: NEED CONFIRMATION** vì README không phân công rõ phần lưu trữ/dữ liệu. AI 3 sở hữu module tính lượng rác thải. AI 1 không triển khai form hoặc công thức tính.
-- Trạng thái ghép vào ứng dụng tổng thể: **BLOCKED** cho đến khi có mã nguồn dự án và AI 2/AI 3 xác nhận hợp đồng dữ liệu.
+- AI 1 sở hữu: `index.html`, `assets/css/{tokens,layout,product-grid,home}.css`, `assets/js/{home,product-grid,cee-integration}.js`.
+- AI 2 sở hữu: `category.html`, `assets/css/category.css`, `assets/js/{category-filter,category-page}.js`. AI 2 dùng lại `product-grid.js` và `product-grid.css`, không có Product Grid thứ hai.
+- AI 3 sở hữu: `post.html`, `assets/css/post.css`, `assets/js/{post-listing,waste-reduction}.js`.
+- Lớp nối dùng chung: `assets/js/cee-config.js` (cấu hình mẫu) và `assets/js/cee-data.js` (adapter `CEEProductRepository`, `CEEWasteCalculator`, cầu nối sự kiện).
+- Nguồn dữ liệu sản phẩm: tin đăng của AI 3 trong `localStorage['cee.listings.v1']`, được `cee-data.js` đổi sang hợp đồng `Product` bên dưới. README không quy định backend nên đây chỉ là lưu cục bộ cho bản demo.
 
 ## 2. Hợp đồng dữ liệu sản phẩm đề xuất dùng chung
 
@@ -36,7 +37,7 @@ Một bản ghi `Product` theo hợp đồng đề xuất:
 | `category` | `string` | Bắt buộc để AI 2 lọc danh mục; danh sách giá trị danh mục: **NEED CONFIRMATION** |
 | `exchangeType` | `"Give" \| "Sell" \| "Exchange"` | Bắt buộc, đúng một trong ba giá trị của README |
 | `createdAt` | ISO-8601 datetime `string` | Bắt buộc để xác định thứ tự mới đăng; cần nguồn dữ liệu cung cấp timestamp thực |
-| `distance` | `{ value: number, unit: string, reference: string } \| null` | Trường mở rộng tùy chọn cho AI 2; đơn vị, vị trí tham chiếu và cách xác định: **NEED CONFIRMATION** |
+| `distance` | `{ value: number, unit: string, reference: string } \| null` | Do người đăng tự nhập (giả lập, không định vị). `unit` và `reference` lấy từ `cee-config.js`; đơn vị, vị trí tham chiếu: **NEED CONFIRMATION** |
 
 Ví dụ dưới đây chỉ minh họa cấu trúc trường, **không phải dữ liệu sản phẩm mẫu để hiển thị**:
 
@@ -78,6 +79,8 @@ type CommunityWasteTotal = {
 } | null;
 ```
 
+`cee-data.js` đổi kết quả của `CEEWasteReduction.getCommunityTotal()` (AI 3) sang dạng trên: chỉ khi `status === "OK"` mới trả `{ value: total, unit }`, mọi trạng thái khác trả `null`.
+
 AI 1 không tự cộng, quy đổi, ước lượng hoặc gán đơn vị. Trường hợp module thiếu, lỗi, trả `null`, giá trị âm/không hữu hạn hoặc thiếu đơn vị thì Trang chủ hiển thị **“Chưa có dữ liệu”**.
 
 **NEED CONFIRMATION từ AI 3:** tên hàm export thực tế, đường dẫn module, công thức, đơn vị, dữ liệu đầu vào và tín hiệu xác nhận giao dịch thành công. Không có nội dung nào trong gói AI 1 thay thế quyết định đó.
@@ -91,39 +94,30 @@ window.dispatchEvent(new Event("cee:products-updated"));
 window.dispatchEvent(new Event("cee:waste-updated"));
 ```
 
+`cee-data.js` tự phát hai sự kiện này khi nhận `cee:listing-created` / `cee:waste-total-changed` của AI 3 hoặc khi `localStorage` đổi ở tab khác.
+
 Trang chủ nghe hai sự kiện này để đọc lại nguồn dữ liệu. Provider phải được đăng ký trước lần đọc đầu tiên, hoặc phát sự kiện sau khi đăng ký.
 
 ## 5. Cách AI 2 tái sử dụng Product Grid
 
-AI 2 không viết lại cấu trúc card, badge hay stylesheet Product Grid. Sau khi áp dụng logic tìm kiếm/lọc của AI 2 lên dữ liệu chung, AI 2 truyền danh sách kết quả vào component:
+`category-page.js` là ES module, đọc dữ liệu qua `readProducts()` (AI 1), lọc bằng `window.CEE.filter` (`category-filter.js`) rồi vẽ bằng Product Grid dùng chung:
 
 ```js
-import { renderProductGrid } from "../ai1-delivery/assets/js/product-grid.js";
+import { renderProductGrid, isValidProduct } from "./product-grid.js";
+import { readProducts } from "./cee-integration.js";
 
-const container = document.querySelector("#category-products");
-renderProductGrid(container, productsAfterAi2SearchAndFilters);
+renderProductGrid(container, productsAfterAi2SearchAndFilters, { emptyMessage });
 ```
 
-Trang Danh mục nạp các stylesheet dùng chung:
-
-```html
-<link rel="stylesheet" href="../ai1-delivery/assets/css/tokens.css">
-<link rel="stylesheet" href="../ai1-delivery/assets/css/product-grid.css">
-```
-
-`renderProductGrid()` chỉ render danh sách được truyền vào. Hàm **không** tìm kiếm, lọc, sắp xếp, phân trang hoặc truy xuất dữ liệu.
+`renderProductGrid()` chỉ render danh sách được truyền vào, không tìm kiếm, lọc, sắp xếp, phân trang hay truy xuất dữ liệu.
 
 ## 6. Cách AI 3 kết nối module tính toán
 
-AI 3 giữ nguyên quyền sở hữu module tính toán của mình và tạo adapter theo đúng giao diện `window.CEEWasteCalculator.getCommunityTotal()`. Adapter phải trả về `{ value, unit }` theo dữ liệu module hoặc `null`; không để AI 1 tự gọi nội bộ hoặc sao chép công thức.
+`waste-reduction.js` giữ nguyên quyền sở hữu công thức. Trang chủ không gọi thẳng module này mà đi qua adapter `window.CEEWasteCalculator` trong `cee-data.js`. Khi nhóm chốt công thức, chỉ cần điền khối `WASTE_RULE` trong `waste-reduction.js`; adapter và Trang chủ không phải sửa.
 
-Tên file và hàm export thực tế của AI 3 hiện chưa có trong phiên này: **NEED CONFIRMATION**. Không giả định đường dẫn hoặc viết import trỏ đến file chưa được bàn giao.
+## 7. Những điểm cần nhóm xác nhận
 
-## 7. Những điểm cần nhóm xác nhận trước khi merge
-
-1. AI 2 và AI 3 đồng ý tên trường `title`, `condition`, `category`, `exchangeType`, `createdAt`, `imageUrl`, `id`.
-2. Bên sở hữu `CEEProductRepository` và cách dữ liệu sản phẩm được chia sẻ giữa ba trang. README không xác định backend/lưu trữ.
-3. Danh sách category và quy tắc chuẩn hóa category.
-4. AI 2 xác nhận đơn vị, vị trí tham chiếu và nguồn của `distance`; không suy ra GPS/khoảng cách thực tế từ trường dữ liệu này.
-5. AI 3 xác nhận adapter thống kê, schema kết quả và đơn vị thực tế.
-6. Đường dẫn đặt thư mục AI 1 trong repository tích hợp cuối cùng.
+1. Danh sách danh mục chính thức (hiện là danh sách mẫu trong `cee-config.js`).
+2. Đơn vị và vị trí tham chiếu của khoảng cách (hiện mẫu `km`, nhập tay, không GPS).
+3. Công thức, đơn vị, dữ liệu đầu vào lượng rác thải và tín hiệu giao dịch thành công.
+4. Có dùng `localStorage` làm nơi lưu cho bản demo hay không (README không quy định backend).

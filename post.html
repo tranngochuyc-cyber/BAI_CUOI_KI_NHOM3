@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Đăng tin — Circular Economy Exchange</title>
+  <link rel="stylesheet" href="./assets/css/tokens.css">
+  <link rel="stylesheet" href="./assets/css/layout.css">
+  <link rel="stylesheet" href="./assets/css/post.css">
+  <script src="./assets/js/cee-config.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
+
+  <header class="site-header">
+    <div class="site-header__inner page-shell">
+      <a class="brand" href="./index.html" aria-label="Circular Economy Exchange - Trang chủ">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" focusable="false">
+            <path d="M25.4 12.2A10.4 10.4 0 0 0 7.2 8.1L5.6 10" />
+            <path d="M5.6 5.2V10h4.8" />
+            <path d="M6.6 19.8a10.4 10.4 0 0 0 18.2 4.1l1.6-1.9" />
+            <path d="M26.4 26.8V22h-4.8" />
+          </svg>
+        </span>
+        <span class="brand__text">
+          <strong>Circular Exchange</strong>
+          <span>TRAO ĐỔI · TÁI SỬ DỤNG</span>
+        </span>
+      </a>
+
+      <nav class="site-nav" aria-label="Điều hướng chính">
+        <a class="site-nav__link" href="./index.html">Trang chủ</a>
+        <a class="site-nav__link" href="./category.html">Danh mục sản phẩm</a>
+        <a class="site-nav__link site-nav__link--active" href="./post.html" aria-current="page">Đăng tin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="page">
+    <section class="intro">
+      <h1>Đăng tin đồ cũ</h1>
+      <p>Mô tả món đồ bạn muốn trao đi, bán lại hoặc đổi.</p>
+    </section>
+
+    <form id="listing-form" class="form" novalidate>
+      <div class="field">
+        <label for="title">Tên sản phẩm</label>
+        <input id="title" name="title" type="text" maxlength="120" autocomplete="off" required aria-describedby="title-error">
+        <p class="error" id="title-error" role="alert"></p>
+      </div>
+
+      <div class="field">
+        <label for="description">Mô tả sản phẩm</label>
+        <textarea id="description" name="description" rows="5" maxlength="1000" required aria-describedby="description-hint description-error"></textarea>
+        <p class="hint" id="description-hint"><span id="description-count">0</span>/1000 ký tự</p>
+        <p class="error" id="description-error" role="alert"></p>
+      </div>
+
+      <div class="field">
+        <label for="condition">Tình trạng</label>
+        <select id="condition" name="condition" required aria-describedby="condition-error">
+          <option value="">Chọn tình trạng</option>
+          <option value="Like new">Like new</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+        </select>
+        <p class="error" id="condition-error" role="alert"></p>
+      </div>
+
+      <!-- Danh mục: README không liệt kê giá trị danh mục (NEED CONFIRMATION).
+           Danh sách mẫu lấy từ assets/js/cee-config.js; trường ẩn nếu danh sách đó rỗng. -->
+      <div class="field" id="category-field" hidden>
+        <label for="category">Danh mục</label>
+        <select id="category" name="category" aria-describedby="category-error">
+          <option value="">Chọn danh mục</option>
+        </select>
+        <p class="error" id="category-error" role="alert"></p>
+      </div>
+
+      <div class="field">
+        <label for="distance" id="distance-label">Khoảng cách (giả lập)</label>
+        <input id="distance" name="distance" type="number" min="0" step="any" inputmode="decimal" aria-describedby="distance-hint distance-error">
+        <p class="hint" id="distance-hint">Không bắt buộc. Người đăng tự nhập; chưa dùng định vị GPS. Đơn vị và vị trí tham chiếu đang chờ nhóm xác nhận.</p>
+        <p class="error" id="distance-error" role="alert"></p>
+      </div>
+
+      <fieldset class="field" aria-describedby="exchange-error">
+        <legend>Loại hình trao đổi</legend>
+        <div class="choices">
+          <label class="choice">
+            <input type="radio" name="exchangeType" value="Give">
+            <span class="choice-body"><strong>Give</strong><small>Cho đi</small></span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="exchangeType" value="Sell">
+            <span class="choice-body"><strong>Sell</strong><small>Bán lại</small></span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="exchangeType" value="Exchange">
+            <span class="choice-body"><strong>Exchange</strong><small>Trao đổi</small></span>
+          </label>
+        </div>
+        <p class="error" id="exchange-error" role="alert"></p>
+      </fieldset>
+
+      <div class="field">
+        <span class="label" id="image-label">Ảnh sản phẩm (giả lập)</span>
+        <div class="image-box">
+          <input id="image" name="image" type="file" accept="image/*" aria-labelledby="image-label" aria-describedby="image-note image-error">
+          <div id="image-preview" class="preview" hidden>
+            <img id="image-preview-img" alt="Xem trước ảnh đã chọn">
+            <div class="preview-meta">
+              <span id="image-name"></span>
+              <button type="button" id="image-clear" class="link-btn">Bỏ ảnh</button>
+            </div>
+          </div>
+        </div>
+        <p class="hint" id="image-note">Chỉ chọn ảnh để xem trước trên máy bạn. Ảnh <strong>không</strong> được tải lên máy chủ và không được lưu trữ trực tuyến.</p>
+        <p class="error" id="image-error" role="alert"></p>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primary">Đăng tin</button>
+        <button type="reset" class="secondary" id="reset-btn">Nhập lại</button>
+      </div>
+    </form>
+
+    <section id="result" class="result" role="status" aria-live="polite" tabindex="-1" hidden>
+      <h2>Đã lưu tin đăng</h2>
+      <p id="result-text"></p>
+      <p><a href="./category.html">Xem trong Danh mục sản phẩm</a> · <a href="./index.html">Về Trang chủ</a></p>
+      <p class="hint">Đăng tin chưa được tính vào lượng rác thải giảm thiểu. Chỉ giao dịch được xác nhận thành công mới được ghi nhận.</p>
+    </section>
+  </main>
+
+  <script src="./assets/js/waste-reduction.js"></script>
+  <script src="./assets/js/post-listing.js"></script>
+</body>
+</html>
