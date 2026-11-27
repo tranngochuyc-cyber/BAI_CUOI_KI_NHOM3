@@ -6,16 +6,16 @@
   <meta name="description" content="Sàn trao đổi đồ cũ và tái chế: đăng, tìm và trao đổi đồ đã qua sử dụng để giảm rác thải.">
   <title>Trang chủ | Circular Economy Exchange</title>
   <link rel="icon" href="./assets/images/logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./css/styles.css?v=20261127b">
-  <link rel="stylesheet" href="./css/layout.css?v=20261127b">
-  <link rel="stylesheet" href="./css/pages.css?v=20261127b">
-  <script defer src="./js/data.js?v=20261127b"></script>
-  <script defer src="./js/logic/filter.js?v=20261127b"></script>
-  <script defer src="./js/logic/listing.js?v=20261127b"></script>
-  <script defer src="./js/logic/waste.js?v=20261127b"></script>
-  <script defer src="./js/logic/store.js?v=20261127b"></script>
-  <script defer src="./js/ui/components.js?v=20261127b"></script>
-  <script defer src="./js/ui/home.js?v=20261127b"></script>
+  <link rel="stylesheet" href="./css/styles.css?v=20261127c">
+  <link rel="stylesheet" href="./css/layout.css?v=20261127c">
+  <link rel="stylesheet" href="./css/pages.css?v=20261127c">
+  <script defer src="./js/data.js?v=20261127c"></script>
+  <script defer src="./js/logic/filter.js?v=20261127c"></script>
+  <script defer src="./js/logic/listing.js?v=20261127c"></script>
+  <script defer src="./js/logic/waste.js?v=20261127c"></script>
+  <script defer src="./js/logic/store.js?v=20261127c"></script>
+  <script defer src="./js/ui/components.js?v=20261127c"></script>
+  <script defer src="./js/ui/home.js?v=20261127c"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
@@ -52,12 +52,19 @@
         </div>
       </div>
 
-      <aside class="impact-card" aria-labelledby="impact-title">
-        <p class="impact-card__tag">TÁC ĐỘNG CỘNG ĐỒNG</p>
-        <h2 id="impact-title" class="impact-card__label">Tổng lượng rác thải cộng đồng đã giảm thiểu <small>(ước tính)</small></h2>
-        <p class="impact-card__value" id="stat-waste" aria-live="polite">0 kg</p>
-        <p class="impact-card__note" id="stat-waste-note"></p>
-      </aside>
+      <div class="hero__visual">
+        <div class="hero__gallery" aria-hidden="true">
+          <img class="hero__photo hero__photo--a" src="./assets/images/products/demo_6-quat-ban.jpg" alt="" width="800" height="533" decoding="async">
+          <img class="hero__photo hero__photo--b" src="./assets/images/products/demo_7-ghe-gap.jpg" alt="" width="800" height="533" decoding="async">
+          <img class="hero__photo hero__photo--c" src="./assets/images/products/demo_2-ao-khoac-jean.jpg" alt="" width="800" height="533" decoding="async">
+        </div>
+        <aside class="impact-card" aria-labelledby="impact-title">
+          <p class="impact-card__tag">TÁC ĐỘNG CỘNG ĐỒNG</p>
+          <h2 id="impact-title" class="impact-card__label">Tổng lượng rác thải cộng đồng đã giảm thiểu <small>(ước tính)</small></h2>
+          <p class="impact-card__value" id="stat-waste" aria-live="polite">0 kg</p>
+          <p class="impact-card__note" id="stat-waste-note"></p>
+        </aside>
+      </div>
     </section>
 
     <section class="stats" aria-labelledby="stats-title">

@@ -64,21 +64,40 @@
     }).forEach(function (item) { breakdown.append(item); });
   }
 
-  // Lối tắt sang trang Danh mục, kèm số món đang có trong từng danh mục.
+  // Lối tắt sang trang Danh mục: thẻ có ảnh (lấy từ một món trong danh mục, ưu tiên ảnh demo)
+  // và số món đang có.
   function renderCategoryLinks() {
     var products = CEE.store.getAllProducts();
     categoryLinks.replaceChildren();
     CEE.data.categories
       .map(function (c) {
-        return { name: c.name, count: products.filter(function (p) { return p.category === c.name; }).length };
+        var inCat = products.filter(function (p) { return p.category === c.name; });
+        var withImage = inCat.filter(function (p) { return p.imageUrl && p.isDemo; })[0] ||
+          inCat.filter(function (p) { return p.imageUrl; })[0];
+        return { name: c.name, count: inCat.length, image: withImage ? withImage.imageUrl : null };
       })
       .filter(function (c) { return c.count > 0; })
       .forEach(function (c) {
         var li = document.createElement("li");
         var a = document.createElement("a");
-        a.className = "chip";
+        a.className = "chip category-tile";
         a.href = "./category.html?category=" + encodeURIComponent(c.name);
-        a.textContent = c.name + " (" + c.count + ")";
+        if (c.image) {
+          var img = document.createElement("img");
+          img.className = "category-tile__image";
+          img.src = c.image;
+          img.alt = "";
+          img.loading = "lazy";
+          a.append(img);
+        }
+        var label = document.createElement("span");
+        label.className = "category-tile__label";
+        label.textContent = c.name;
+        var count = document.createElement("span");
+        count.className = "category-tile__count";
+        count.textContent = c.count + " món";
+        a.append(label, count);
+        a.setAttribute("aria-label", c.name + ", " + c.count + " món");
         li.append(a);
         categoryLinks.append(li);
       });

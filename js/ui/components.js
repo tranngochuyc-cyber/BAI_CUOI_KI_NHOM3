@@ -113,6 +113,11 @@
     tags.append(exchangeBadge(product.exchangeType), el("span", "product-card__category", product.category));
     body.append(tags, el("h3", "product-card__title", product.title));
     if (product.description) body.append(el("p", "product-card__description", product.description));
+    var more = el("button", "product-card__more", "Xem chi tiết");
+    more.type = "button";
+    more.setAttribute("aria-label", "Xem chi tiết: " + product.title);
+    more.addEventListener("click", function () { openDetail(product, card); });
+    body.append(more);
 
     var meta = el("ul", "product-card__meta");
     if (product.distance) {
@@ -126,7 +131,81 @@
     body.append(meta, createAction(product));
 
     card.append(createMedia(product), body);
+    // Bấm vào vùng trống của thẻ cũng mở chi tiết (nút và liên kết giữ chức năng riêng).
+    card.addEventListener("click", function (event) {
+      if (event.target.closest("button, a")) return;
+      openDetail(product, card);
+    });
     return card;
+  }
+
+  /* ---------- Hộp chi tiết món đồ ---------- */
+
+  var detailDialog = null;
+
+  function ensureDetailDialog() {
+    if (detailDialog) return detailDialog;
+    detailDialog = el("dialog", "detail");
+    detailDialog.setAttribute("aria-labelledby", "detail-title");
+    // Bấm ra ngoài hộp (vùng backdrop) thì đóng.
+    detailDialog.addEventListener("click", function (event) {
+      if (event.target === detailDialog) detailDialog.close();
+    });
+    document.body.append(detailDialog);
+    return detailDialog;
+  }
+
+  function openDetail(product, card) {
+    if (typeof HTMLDialogElement === "undefined") return;
+    var dialog = ensureDetailDialog();
+    dialog.replaceChildren();
+
+    var media = createMedia(product);
+    media.classList.add("detail__media");
+
+    var body = el("div", "detail__body");
+    var tags = el("div", "product-card__tags");
+    tags.append(exchangeBadge(product.exchangeType), el("span", "product-card__category", product.category));
+    var title = el("h2", "detail__title", product.title);
+    title.id = "detail-title";
+    body.append(tags, title);
+    body.append(el("p", "detail__description", product.description || "Chưa có mô tả."));
+
+    var facts = el("dl", "detail__facts");
+    function fact(label, value) {
+      var wrap = el("div");
+      wrap.append(el("dt", null, label), el("dd", null, value));
+      facts.append(wrap);
+    }
+    fact("Tình trạng", data.conditionLabel(product.condition) + " (" + product.condition + ")");
+    fact("Loại hình", data.exchangeLabel(product.exchangeType));
+    fact("Khoảng cách", product.distance ? formatNumber(product.distance.value) + " " + product.distance.unit : "Chưa có dữ liệu");
+    fact("Ngày đăng", dateFormat.format(new Date(product.createdAt)));
+    var est = CEE.store.estimateFor(product);
+    fact("Rác thải giảm (ước tính)", "~" + formatNumber(est.value) + " " + est.unit);
+    body.append(facts);
+    if (product.isDemo) body.append(el("p", "detail__note", "Tin demo: dữ liệu minh họa để trình bày, ảnh chỉ mang tính minh họa."));
+
+    var action = createAction(product);
+    var confirmButton = action.querySelector("button");
+    if (confirmButton) {
+      // Sau khi xác nhận trong hộp này, đồng bộ lại nút trên thẻ ở trang.
+      confirmButton.addEventListener("click", function () {
+        setTimeout(function () {
+          var cardAction = card && card.querySelector(".product-card__action");
+          if (cardAction) cardAction.replaceWith(createAction(product));
+        }, 0);
+      });
+    }
+    var close = el("button", "btn btn--ghost detail__close", "Đóng");
+    close.type = "button";
+    close.addEventListener("click", function () { dialog.close(); });
+    var footer = el("div", "detail__footer");
+    footer.append(action, close);
+    body.append(footer);
+
+    dialog.append(media, body);
+    dialog.showModal();
   }
 
   /**
