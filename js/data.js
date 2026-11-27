@@ -56,15 +56,16 @@
 
     // Tin demo để website không trống khi trình bày. Đặt false để ẩn.
     showDemoData: true,
+    // imageSrc: ảnh minh họa miễn phí (Unsplash License), lưu cục bộ để chạy offline. Nguồn ảnh: docs/nguon-anh.md
     demoProducts: [
-      { id: "demo_1", title: "Nồi cơm điện 1,8 lít", description: "Nấu vẫn chín đều, nắp hơi trầy nhẹ. Kèm xửng hấp.", condition: "Good", category: "Đồ gia dụng", exchangeType: "Sell", distance: 3.5, createdAt: "2026-11-18T08:00:00+07:00" },
-      { id: "demo_2", title: "Áo khoác jean", description: "Size M, mặc vài lần, không còn vừa nên muốn tặng lại.", condition: "Like new", category: "Quần áo & phụ kiện", exchangeType: "Give", distance: 1.2, createdAt: "2026-11-19T09:30:00+07:00" },
-      { id: "demo_3", title: "Kệ sách gỗ 3 tầng", description: "Chân kệ hơi lỏng, cần siết lại ốc. Muốn đổi lấy bàn học nhỏ.", condition: "Fair", category: "Nội thất", exchangeType: "Exchange", distance: 6, createdAt: "2026-11-20T14:00:00+07:00" },
-      { id: "demo_4", title: "Tai nghe có dây", description: "Âm thanh tốt, dây còn nguyên, đổi lấy chuột máy tính.", condition: "Good", category: "Đồ điện tử", exchangeType: "Exchange", distance: 8.5, createdAt: "2026-11-21T10:15:00+07:00" },
-      { id: "demo_5", title: "Bộ giáo trình Tin học đại cương", description: "Sách sạch, không ghi chú, phù hợp sinh viên năm nhất.", condition: "Like new", category: "Sách & văn phòng phẩm", exchangeType: "Give", distance: 0.8, createdAt: "2026-11-22T16:45:00+07:00" },
-      { id: "demo_6", title: "Quạt bàn mini", description: "Chạy êm, mất nút số 3, phù hợp phòng trọ.", condition: "Fair", category: "Đồ điện tử", exchangeType: "Sell", distance: 12, createdAt: "2026-11-23T19:20:00+07:00" },
-      { id: "demo_7", title: "Ghế nhựa gấp gọn", description: "Còn chắc chắn, gấp lại tiết kiệm chỗ.", condition: "Good", category: "Nội thất", exchangeType: "Give", distance: 2.4, createdAt: "2026-11-24T07:40:00+07:00" },
-      { id: "demo_8", title: "Balo laptop 15 inch", description: "Ngăn chống sốc, khóa kéo còn tốt, dùng một học kỳ.", condition: "Like new", category: "Quần áo & phụ kiện", exchangeType: "Sell", distance: 4, createdAt: "2026-11-25T20:10:00+07:00" },
+      { id: "demo_1", imageSrc: "./assets/images/products/demo_1-noi-com-dien.jpg", title: "Nồi cơm điện 1,8 lít", description: "Nấu vẫn chín đều, nắp hơi trầy nhẹ. Kèm xửng hấp.", condition: "Good", category: "Đồ gia dụng", exchangeType: "Sell", distance: 3.5, createdAt: "2026-11-18T08:00:00+07:00" },
+      { id: "demo_2", imageSrc: "./assets/images/products/demo_2-ao-khoac-jean.jpg", title: "Áo khoác jean", description: "Size M, mặc vài lần, không còn vừa nên muốn tặng lại.", condition: "Like new", category: "Quần áo & phụ kiện", exchangeType: "Give", distance: 1.2, createdAt: "2026-11-19T09:30:00+07:00" },
+      { id: "demo_3", imageSrc: "./assets/images/products/demo_3-ke-sach.jpg", title: "Kệ sách gỗ 3 tầng", description: "Chân kệ hơi lỏng, cần siết lại ốc. Muốn đổi lấy bàn học nhỏ.", condition: "Fair", category: "Nội thất", exchangeType: "Exchange", distance: 6, createdAt: "2026-11-20T14:00:00+07:00" },
+      { id: "demo_4", imageSrc: "./assets/images/products/demo_4-tai-nghe.jpg", title: "Tai nghe có dây", description: "Âm thanh tốt, dây còn nguyên, đổi lấy chuột máy tính.", condition: "Good", category: "Đồ điện tử", exchangeType: "Exchange", distance: 8.5, createdAt: "2026-11-21T10:15:00+07:00" },
+      { id: "demo_5", imageSrc: "./assets/images/products/demo_5-giao-trinh.jpg", title: "Bộ giáo trình Tin học đại cương", description: "Sách sạch, không ghi chú, phù hợp sinh viên năm nhất.", condition: "Like new", category: "Sách & văn phòng phẩm", exchangeType: "Give", distance: 0.8, createdAt: "2026-11-22T16:45:00+07:00" },
+      { id: "demo_6", imageSrc: "./assets/images/products/demo_6-quat-ban.jpg", title: "Quạt bàn mini", description: "Chạy êm, mất nút số 3, phù hợp phòng trọ.", condition: "Fair", category: "Đồ điện tử", exchangeType: "Sell", distance: 12, createdAt: "2026-11-23T19:20:00+07:00" },
+      { id: "demo_7", imageSrc: "./assets/images/products/demo_7-ghe-gap.jpg", title: "Ghế nhựa gấp gọn", description: "Còn chắc chắn, gấp lại tiết kiệm chỗ.", condition: "Good", category: "Nội thất", exchangeType: "Give", distance: 2.4, createdAt: "2026-11-24T07:40:00+07:00" },
+      { id: "demo_8", imageSrc: "./assets/images/products/demo_8-balo.jpg", title: "Balo laptop 15 inch", description: "Ngăn chống sốc, khóa kéo còn tốt, dùng một học kỳ.", condition: "Like new", category: "Quần áo & phụ kiện", exchangeType: "Sell", distance: 4, createdAt: "2026-11-25T20:10:00+07:00" },
     ],
   };
 
