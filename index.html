@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Circular Economy Exchange - sàn trao đổi đồ cũ và tái chế.">
+  <title>Trang chủ | Circular Economy Exchange</title>
+  <link rel="stylesheet" href="./assets/css/tokens.css">
+  <link rel="stylesheet" href="./assets/css/product-grid.css">
+  <link rel="stylesheet" href="./assets/css/home.css">
+  <script type="module" src="./assets/js/home.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
+
+  <header class="site-header">
+    <div class="site-header__inner page-shell">
+      <a class="brand" href="#home" aria-label="Circular Economy Exchange - Trang chủ">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" focusable="false">
+            <path d="M25.4 12.2A10.4 10.4 0 0 0 7.2 8.1L5.6 10" />
+            <path d="M5.6 5.2V10h4.8" />
+            <path d="M6.6 19.8a10.4 10.4 0 0 0 18.2 4.1l1.6-1.9" />
+            <path d="M26.4 26.8V22h-4.8" />
+          </svg>
+        </span>
+        <span class="brand__text">
+          <strong>Circular Exchange</strong>
+          <span>TRAO ĐỔI · TÁI SỬ DỤNG</span>
+        </span>
+      </a>
+
+      <nav class="site-nav" aria-label="Điều hướng chính">
+        <a class="site-nav__link site-nav__link--active" href="#home" aria-current="page">Trang chủ</a>
+        <a class="site-nav__link" href="#new-items">Mặt hàng mới</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="page-shell">
+    <section id="home" class="hero" aria-labelledby="hero-title">
+      <div class="hero__copy">
+        <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> KINH TẾ TUẦN HOÀN BẮT ĐẦU TỪ BẠN</p>
+        <h1 id="hero-title">Món đồ cũ.<br><span>Một vòng đời mới.</span></h1>
+        <p class="hero__description">
+          Khám phá những món đồ đang tìm chủ nhân mới và góp phần kéo dài vòng đời sản phẩm.
+        </p>
+        <a class="hero__link" href="#new-items">
+          Khám phá mặt hàng mới
+          <span aria-hidden="true">↓</span>
+        </a>
+      </div>
+
+      <aside class="impact-card" aria-labelledby="impact-title">
+        <div class="impact-card__topline">
+          <span class="impact-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 40 40" focusable="false">
+              <path d="M31.7 8.4c-11.8-.7-20.9 2.1-23.3 10.2-1.4 4.7 1.8 8.8 6.4 8.5 7.7-.5 13.7-9.4 16.9-18.7Z" />
+              <path d="M8.8 31.8c4.7-7.1 10.2-11.5 17.4-16" />
+            </svg>
+          </span>
+          <span class="impact-card__tag">TÁC ĐỘNG CỘNG ĐỒNG</span>
+        </div>
+        <p id="impact-title" class="impact-card__label">Tổng lượng rác thải đã giảm thiểu</p>
+        <p class="impact-card__value" id="community-waste-value" aria-live="polite" aria-atomic="true">Chưa có dữ liệu</p>
+        <p class="impact-card__note" id="community-waste-note">
+          Số liệu được cung cấp bởi module tính toán của hệ thống.
+        </p>
+        <span class="impact-card__decoration" aria-hidden="true"></span>
+      </aside>
+    </section>
+
+    <section id="new-items" class="products-section" aria-labelledby="products-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">VỪA ĐƯỢC CHIA SẺ</p>
+          <h2 id="products-title">Mặt hàng mới đăng</h2>
+          <p class="section-heading__description">Những sản phẩm mới nhất đang chờ được tiếp tục sử dụng.</p>
+        </div>
+        <span class="section-heading__ornament" aria-hidden="true">✳</span>
+      </div>
+
+      <div
+        id="latest-products"
+        class="product-grid"
+        role="list"
+        aria-label="Các mặt hàng mới đăng"
+        aria-live="polite"
+        aria-busy="false"
+      >
+        <p class="grid-state" role="status">Đang tải dữ liệu sản phẩm…</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="page-shell site-footer__inner">
+      <span>Circular Economy Exchange</span>
+      <span>Kéo dài vòng đời sản phẩm, giảm lãng phí.</span>
+    </div>
+  </footer>
+</body>
+</html>
