@@ -33,7 +33,7 @@ export async function readProducts() {
 /**
  * Expected provider from AI 3:
  * window.CEEWasteCalculator.getCommunityTotal()
- *   -> { value: number, unit: string } | null | Promise<...>
+ *   -> { value: number, unit: string, transactionCount?: number, label?: string } | null | Promise<...>
  * AI 1 validates and displays the result; it performs no waste calculation.
  */
 export async function readCommunityWasteTotal() {
@@ -55,7 +55,13 @@ export async function readCommunityWasteTotal() {
       return null;
     }
 
-    return { value: result.value, unit: result.unit.trim() };
+    return {
+      value: result.value,
+      unit: result.unit.trim(),
+      // Thông tin phụ để giải thích con số (không bắt buộc).
+      transactionCount: Number.isInteger(result.transactionCount) ? result.transactionCount : null,
+      label: typeof result.label === "string" ? result.label : "",
+    };
   } catch (error) {
     console.error("Không thể đọc tổng lượng rác thải từ CEEWasteCalculator.", error);
     return null;

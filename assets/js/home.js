@@ -58,6 +58,17 @@ function formatCommunityTotal(summary) {
   return `${formattedValue} ${summary.unit}`;
 }
 
+function describeTotal(summary) {
+  const parts = [];
+  if (summary.transactionCount === 0) {
+    parts.push("Chưa có giao dịch thành công nào.");
+  } else if (Number.isInteger(summary.transactionCount)) {
+    parts.push(`Ước tính từ ${summary.transactionCount} giao dịch thành công.`);
+  }
+  if (summary.label) parts.push(`${summary.label}.`);
+  return parts.join(" ") || "Kết quả được cung cấp bởi module tính toán của hệ thống.";
+}
+
 async function refreshWasteTotal() {
   if (!wasteValue) return;
 
@@ -73,9 +84,7 @@ async function refreshWasteTotal() {
 
   wasteValue.textContent = formatCommunityTotal(summary);
   wasteValue.dataset.state = "available";
-  if (wasteNote) {
-    wasteNote.textContent = "Kết quả được cung cấp trực tiếp bởi module tính toán của hệ thống.";
-  }
+  if (wasteNote) wasteNote.textContent = describeTotal(summary);
 }
 
 async function refreshHomeData() {
@@ -85,5 +94,17 @@ async function refreshHomeData() {
 // AI 2 / AI 3 (or the shared data layer) dispatch these events after updates.
 window.addEventListener(CEE_EVENTS.productsUpdated, refreshProducts);
 window.addEventListener(CEE_EVENTS.wasteUpdated, refreshWasteTotal);
+
+// Nút đặt lại dữ liệu để tập dượt demo (chỉ xóa tin tự đăng và giao dịch trên trình duyệt này).
+const resetButton = document.querySelector("#reset-demo");
+if (resetButton && window.CEETransactions && typeof window.CEETransactions.reset === "function") {
+  resetButton.hidden = false;
+  resetButton.addEventListener("click", () => {
+    const ok = window.confirm(
+      "Xóa các tin bạn đã đăng và các giao dịch đã xác nhận trên trình duyệt này? Tin demo vẫn được giữ.",
+    );
+    if (ok) window.CEETransactions.reset();
+  });
+}
 
 refreshHomeData();

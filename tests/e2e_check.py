@@ -1,9 +1,9 @@
 # Kiểm thử end-to-end bằng Chrome thật (Playwright cho Python).
-# Cách chạy: (1) python3 -m http.server 8765 ở thư mục gốc repo; (2) python3 tests/e2e_check.py
+# Cách chạy: (1) python3 demo-server.py ở thư mục gốc repo; (2) python3 tests/e2e_check.py
 # Biến môi trường: CEE_BASE (mặc định http://127.0.0.1:8765), CEE_CHROME (đường dẫn Chrome; bỏ trống = Chromium của Playwright).
 import os, sys, json, struct, zlib, tempfile
 from playwright.sync_api import sync_playwright
-BASE=os.environ.get('CEE_BASE','http://127.0.0.1:8765')
+BASE=os.environ.get('CEE_BASE','http://127.0.0.1:8000')
 CHROME=os.environ.get('CEE_CHROME') or None
 SHOTS=tempfile.gettempdir()
 
@@ -27,11 +27,13 @@ with sync_playwright() as p:
     page.on('console', lambda m: errors.append(m.text) if m.type=='error' else None)
     page.on('request', lambda r: external.append(r.url) if not (r.url.startswith(BASE) or r.url.startswith('blob:')) else None)
 
-    # 1. Trang chủ trống
-    page.goto(BASE+'/index.html'); page.wait_for_selector('.grid-state')
-    check('Home: thống kê rác thải = Chưa có dữ liệu', page.inner_text('#community-waste-value').strip()=='Chưa có dữ liệu')
-    check('Home: grid rỗng hiện trạng thái, không có card giả', page.locator('.product-card').count()==0 and 'Chưa có sản phẩm mới' in page.inner_text('#latest-products'))
-    check('Home: 3 link điều hướng', page.locator('.site-nav__link').count()==3)
+    # 1. Trang chủ lần đầu: chỉ có tin demo, chưa có giao dịch
+    page.goto(BASE+'/index.html'); page.wait_for_selector('.product-card')
+    check('Home: hiển thị 6 tin demo, mỗi thẻ có nhãn "Tin demo"', page.locator('.product-card').count()==6 and page.locator('.product-card__demo').count()==6)
+    check('Home: thống kê = 0 kg, ghi rõ chưa có giao dịch và là giả định', page.inner_text('#community-waste-value').strip()=='0 kg' and 'Chưa có giao dịch' in page.inner_text('#community-waste-note') and 'Giả định' in page.inner_text('#community-waste-note'))
+    check('Home: 3 link điều hướng + mục Cách hoạt động 3 bước', page.locator('.site-nav__link').count()==3 and page.locator('.how-step').count()==3)
+    check('Home: nhãn loại hình có tiếng Việt (Tặng/Bán/Đổi)', any(t in page.inner_text('#latest-products') for t in ['Give · Tặng','Sell · Bán','Exchange · Đổi']))
+    check('Home: thẻ hiện khoảng cách', page.locator('.product-card__distance').count()==6)
 
     # 2. Đăng tin
     page.goto(BASE+'/post.html')
@@ -69,42 +71,55 @@ with sync_playwright() as p:
     post('Sách lập trình Python','Giáo trình cũ, có ghi chú bút chì','Fair','Sách & văn phòng phẩm','Exchange')
     check('Post: đăng tin KHÔNG ghi vào sổ rác thải', page.evaluate("localStorage.getItem('cee.wasteLedger.v1')")is None)
 
-    # 3. Trang chủ sau khi đăng
+    # 3. Trang chủ sau khi đăng: tin mới nhất lên đầu, tối đa 6 thẻ
     page.goto(BASE+'/index.html'); page.wait_for_selector('.product-card')
     titles=page.eval_on_selector_all('.product-card__title','e=>e.map(x=>x.textContent)')
-    check('Home: 3 card, mới nhất lên đầu', titles==['Sách lập trình Python','Ghế xoay văn phòng','Bàn gỗ sồi'], str(titles))
+    check('Home: 3 tin vừa đăng đứng đầu, mới nhất trước', titles[:3]==['Sách lập trình Python','Ghế xoay văn phòng','Bàn gỗ sồi'], str(titles))
+    check('Home: giới hạn 6 thẻ', len(titles)==6)
     badges=page.eval_on_selector_all('.condition-badge','e=>e.map(x=>x.textContent)')
-    check('Home: badge đúng nhãn', badges==['Fair','Like new','Good'], str(badges))
-    check('Home: thống kê vẫn "Chưa có dữ liệu" (công thức chưa xác nhận)', page.inner_text('#community-waste-value').strip()=='Chưa có dữ liệu')
+    check('Home: badge đúng nhãn', badges[:3]==['Fair','Like new','Good'], str(badges))
+    check('Home: tin tự đăng không có nhãn demo', page.locator('.product-card').nth(0).locator('.product-card__demo').count()==0)
 
-    # 4. Danh mục
+    # 4. Danh mục: 3 tin đăng + 6 tin demo
     page.goto(BASE+'/category.html'); page.wait_for_selector('.product-card')
-    check('Category: hiển thị 3 sản phẩm', page.locator('.product-card').count()==3)
+    check('Category: hiển thị 9 sản phẩm', page.locator('.product-card').count()==9)
     opts=page.eval_on_selector_all('#category-select option','o=>o.map(x=>x.value)')
-    check('Category: danh mục lọc lấy từ dữ liệu thực', opts==['','Nội thất','Sách & văn phòng phẩm'], str(opts))
-    page.fill('#search-input','ghe')
-    check('Category: tìm không dấu "ghe" -> Ghế', page.locator('.product-card').count()==1)
+    check('Category: 5 danh mục lấy từ dữ liệu', len(opts)==6 and opts[0]=='', str(opts))
+    page.fill('#search-input','ghe xoay')
+    check('Category: tìm không dấu "ghe xoay" -> 1', page.locator('.product-card').count()==1)
     page.fill('#search-input','')
     page.select_option('#category-select','Nội thất')
-    check('Category: lọc danh mục Nội thất -> 2', page.locator('.product-card').count()==2)
+    check('Category: Nội thất -> 3', page.locator('.product-card').count()==3)
     page.fill('#distance-input','5')
-    check('Category: Nội thất + khoảng cách <=5 -> 1 (Bàn gỗ sồi)', page.locator('.product-card').count()==1 and 'Bàn gỗ' in page.inner_text('.product-card__title'))
+    check('Category: Nội thất + ≤5 km -> Bàn gỗ sồi', page.locator('.product-card').count()==1 and 'Bàn gỗ' in page.inner_text('.product-card__title'))
     page.fill('#search-input','xyz')
     check('Category: không có kết quả -> thông báo rỗng', page.locator('.product-card').count()==0 and 'Không có sản phẩm phù hợp' in page.inner_text('#result-status'))
-    page.fill('#search-input',''); page.select_option('#category-select',''); page.fill('#distance-input','')
-    page.fill('#distance-input','5')
-    check('Category: lọc khoảng cách đơn thuần ẩn SP thiếu khoảng cách -> 1', page.locator('.product-card').count()==1)
+    page.fill('#search-input',''); page.select_option('#category-select',''); page.fill('#distance-input','5')
+    check('Category: chỉ lọc ≤5 km -> 4', page.locator('.product-card').count()==4)
     page.press('#search-input','Enter')
     check('Category: Enter không tải lại trang', page.url.endswith('/category.html'))
-    check('Category: nhãn khoảng cách có đơn vị mẫu', 'km' in page.inner_text('#distance-label'))
+    check('Category: nhãn khoảng cách có đơn vị', 'km' in page.inner_text('#distance-label'))
 
-    # 5. Rác thải: chỉ ghi khi xác nhận, công thức chưa chốt -> không hiện số
+    # 5. Giao dịch thành công -> cộng ước tính (Nội thất 12 kg theo giả định)
+    page.fill('#distance-input',''); page.fill('#search-input','ban go soi')
+    page.click('.product-card__confirm')
+    check('Transaction: thẻ chuyển sang "Đã giao dịch thành công" kèm ước tính', 'Đã giao dịch thành công' in page.inner_text('.product-card__done') and '12 kg' in page.inner_text('.product-card__done'))
+    check('Transaction: không còn nút xác nhận trên thẻ đó', page.locator('.product-card__confirm').count()==0)
     r1=page.evaluate("CEEWasteReduction.recordConfirmedTransaction({transactionId:'t1',listingId:'x',exchangeType:'Give',transactionConfirmed:false,inputs:{}}).status")
-    check('Waste: chưa xác nhận -> không ghi', r1=='REJECTED_NOT_CONFIRMED')
-    r2=page.evaluate("CEEWasteReduction.recordConfirmedTransaction({transactionId:'t2',listingId:'x',exchangeType:'Give',transactionConfirmed:true,inputs:{}}).status")
-    check('Waste: xác nhận -> ghi sổ', r2=='RECORDED')
+    check('Waste: giao dịch chưa xác nhận -> không ghi', r1=='REJECTED_NOT_CONFIRMED')
     page.goto(BASE+'/index.html'); page.wait_for_selector('.product-card')
-    check('Waste: công thức chưa chốt -> Trang chủ không hiện số', page.inner_text('#community-waste-value').strip()=='Chưa có dữ liệu')
+    check('Home: thống kê = 12 kg từ 1 giao dịch', page.inner_text('#community-waste-value').strip()=='12 kg' and '1 giao dịch' in page.inner_text('#community-waste-note'))
+    page.locator('.product-card', has_text='Quạt bàn mini').locator('.product-card__confirm').click()
+    page.wait_for_function("document.querySelector('#community-waste-value').textContent.trim()==='13,5 kg'")
+    check('Home: xác nhận thêm ngay trên Trang chủ -> 13,5 kg, tự cập nhật', True)
+    page.reload(); page.wait_for_selector('.product-card')
+    check('Home: tải lại vẫn giữ 2 giao dịch, không cộng trùng', page.inner_text('#community-waste-value').strip()=='13,5 kg' and page.locator('.product-card__done').count()>=1)
+
+    # 5b. Đặt lại dữ liệu demo
+    page.once('dialog', lambda d: d.accept())
+    page.click('#reset-demo')
+    page.wait_for_function("document.querySelector('#community-waste-value').textContent.trim()==='0 kg'")
+    check('Reset: về 0 kg và chỉ còn 6 tin demo', page.locator('.product-card__demo').count()==6 and page.evaluate("localStorage.getItem('cee.listings.v1')") is None)
 
     # 6. Responsive + ảnh chụp
     for name in ['index','category','post']:

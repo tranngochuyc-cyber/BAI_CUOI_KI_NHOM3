@@ -121,3 +121,4 @@ renderProductGrid(container, productsAfterAi2SearchAndFilters, { emptyMessage })
 2. Đơn vị và vị trí tham chiếu của khoảng cách (hiện mẫu `km`, nhập tay, không GPS).
 3. Công thức, đơn vị, dữ liệu đầu vào lượng rác thải và tín hiệu giao dịch thành công.
 4. Có dùng `localStorage` làm nơi lưu cho bản demo hay không (README không quy định backend).
+5. Cập nhật 27/11/2026: tin demo (`isDemo: true`) và giả định ước tính rác thải nằm trong `cee-config.js`; nút xác nhận giao dịch trên Product Grid gọi `window.CEETransactions` (trong `cee-data.js`). Chi tiết ở README mục 11.

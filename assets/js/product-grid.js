@@ -15,6 +15,21 @@ export const EXCHANGE_TYPES = Object.freeze([
   "Exchange",
 ]);
 
+// Nghĩa tiếng Việt chỉ để hiển thị; giá trị dữ liệu giữ nguyên theo README.
+const CONDITION_VI = Object.freeze({
+  "Like new": "Như mới",
+  Good: "Tốt",
+  Fair: "Còn dùng được",
+});
+
+const EXCHANGE_VI = Object.freeze({
+  Give: "Tặng",
+  Sell: "Bán",
+  Exchange: "Đổi",
+});
+
+const numberFormat = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 });
+
 const CONDITION_CLASS = Object.freeze({
   "Like new": "condition-badge--like-new",
   Good: "condition-badge--good",
@@ -84,7 +99,8 @@ export function renderConditionBadge(condition) {
   const badge = document.createElement("span");
   badge.className = `condition-badge ${CONDITION_CLASS[condition]}`;
   badge.textContent = condition;
-  badge.setAttribute("aria-label", `Tình trạng: ${condition}`);
+  badge.title = `Tình trạng: ${CONDITION_VI[condition]}`;
+  badge.setAttribute("aria-label", `Tình trạng: ${condition} (${CONDITION_VI[condition]})`);
   return badge;
 }
 
@@ -118,7 +134,63 @@ function createProductImage(product) {
     media.append(badgeSlot);
   }
 
+  if (product.isDemo === true) {
+    const demo = document.createElement("span");
+    demo.className = "product-card__demo";
+    demo.textContent = "Tin demo";
+    demo.title = "Dữ liệu minh họa để trình bày, không phải tin đăng thật";
+    media.append(demo);
+  }
+
   return media;
+}
+
+function formatDistance(distance) {
+  if (!distance || typeof distance !== "object" || !Number.isFinite(distance.value)) return null;
+  const unit = isNonEmptyString(distance.unit) ? ` ${distance.unit}` : "";
+  return `Cách ${numberFormat.format(distance.value)}${unit}`;
+}
+
+function markCompleted(container, estimate) {
+  const done = document.createElement("p");
+  done.className = "product-card__done";
+  done.setAttribute("role", "status");
+  done.textContent = estimate
+    ? `✓ Đã giao dịch thành công · giảm ~${numberFormat.format(estimate.value)} ${estimate.unit} rác (ước tính)`
+    : "✓ Đã giao dịch thành công";
+  container.replaceChildren(done);
+}
+
+/**
+ * Nút "Xác nhận giao dịch thành công": chỉ gọi window.CEETransactions (lớp nối dùng chung),
+ * việc ghi nhận và tính toán do module của AI 3 thực hiện. Không có provider thì không hiện nút.
+ */
+function createTransactionAction(product) {
+  const transactions = window.CEETransactions;
+  if (!transactions || typeof transactions.confirm !== "function") return null;
+
+  const action = document.createElement("div");
+  action.className = "product-card__action";
+  const estimate = typeof transactions.estimateFor === "function" ? transactions.estimateFor(product) : null;
+
+  if (transactions.isCompleted(product.id)) {
+    markCompleted(action, estimate);
+    return action;
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "product-card__confirm";
+  button.textContent = "Xác nhận giao dịch thành công";
+  button.setAttribute("aria-label", `Xác nhận giao dịch thành công: ${product.title}`);
+  button.addEventListener("click", () => {
+    const result = transactions.confirm(product);
+    if (result && (result.status === "RECORDED" || result.status === "DUPLICATE")) {
+      markCompleted(action, estimate);
+    }
+  });
+  action.append(button);
+  return action;
 }
 
 function formatPostedDate(value) {
@@ -165,8 +237,16 @@ export function createProductCard(product) {
 
   const exchangeType = document.createElement("span");
   exchangeType.className = "product-card__exchange";
-  exchangeType.textContent = product.exchangeType;
+  exchangeType.textContent = `${product.exchangeType} · ${EXCHANGE_VI[product.exchangeType]}`;
   meta.append(exchangeType);
+
+  const distanceText = formatDistance(product.distance);
+  if (distanceText) {
+    const distance = document.createElement("span");
+    distance.className = "product-card__distance";
+    distance.textContent = distanceText;
+    meta.append(distance);
+  }
 
   const postedDate = formatPostedDate(product.createdAt);
   if (postedDate) {
@@ -178,6 +258,9 @@ export function createProductCard(product) {
   }
 
   body.append(meta);
+
+  const action = createTransactionAction(product);
+  if (action) body.append(action);
   card.append(createProductImage(product), body);
   return card;
 }

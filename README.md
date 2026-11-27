@@ -378,4 +378,32 @@ Môi trường: Node 22, Google Chrome thật qua Playwright, máy chủ tĩnh c
 2. Danh mục chính thức (mục 5.4): đang dùng danh sách mẫu trong `cee-config.js`.
 3. Đơn vị và vị trí tham chiếu của khoảng cách (mục 5.3): đang dùng `km` làm mẫu, người đăng tự nhập, không định vị GPS. Sản phẩm không có khoảng cách bị ẩn khi bật lọc khoảng cách.
 4. Tiêu chuẩn phân loại từng nhãn tình trạng (mục 5.5) và việc người đăng tự chọn tình trạng trong form.
-5. Không có dữ liệu sản phẩm mẫu: hai trang hiển thị trạng thái trống cho đến khi có tin đăng. Nhóm quyết định có thêm dữ liệu mẫu có ghi nhãn để demo hay không.
+5. Tin demo (mục 11): nhóm xác nhận giữ lại khi trình bày, hoặc đặt `showDemoData: false` trong `cee-config.js` để ẩn.
+6. Giả định ước tính rác thải theo danh mục (mục 11) cần giảng viên đồng ý hoặc thay bằng quy tắc chính thức.
+
+## 11. Cập nhật chuẩn bị thuyết trình (27/11/2026)
+
+Chỉ sửa phần AI 1 (Trang chủ, Product Grid) và lớp nối dùng chung. Không sửa file của AI 2 (`category.html`, `category-*.js`, `category.css`) và AI 3 (`post.html`, `post-listing.js`, `waste-reduction.js`, `post.css`).
+
+### 11.1. Đã làm
+
+- **Tin demo có nhãn:** 6 tin minh họa trong `cee-config.js`, mỗi thẻ có nhãn “Tin demo”. Tin tự đăng luôn đứng trước vì mới hơn. Ẩn toàn bộ bằng `showDemoData: false`.
+- **Luồng giao dịch thành công:** mỗi thẻ sản phẩm có nút “Xác nhận giao dịch thành công”. Nút gọi `CEETransactions.confirm()` (trong `cee-data.js`), từ đó gọi `recordConfirmedTransaction()` của module AI 3 với `transactionConfirmed: true`. Mỗi tin chỉ được ghi một lần.
+- **Ước tính rác thải:** quy tắc ước tính (kg theo danh mục) đặt trong `cee-config.js` và truyền vào module AI 3 qua `createWasteModule({ rule })`; **`waste-reduction.js` không bị sửa**. Trang chủ ghi rõ “(ước tính)”, số giao dịch và dòng “Giả định minh họa của nhóm, chưa được giảng viên xác nhận”. Chưa có giao dịch thì hiện `0 kg`.
+- **Trang chủ:** thêm mục “Cách hoạt động” 3 bước; nút “Đặt lại dữ liệu demo” ở cuối trang (xóa tin tự đăng và giao dịch trên trình duyệt này, giữ tin demo).
+- **Product Grid:** loại hình hiển thị kèm tiếng Việt (`Give · Tặng`, `Sell · Bán`, `Exchange · Đổi`), badge có chú thích tiếng Việt khi rê chuột, thẻ hiện khoảng cách. Giá trị dữ liệu giữ nguyên theo README.
+- **Chạy không cần mạng:** `chay-demo.bat` + `demo-server.py` chạy máy chủ cục bộ tại `http://localhost:8000`. Mở trực tiếp bằng file thì trang hiện cảnh báo hướng dẫn.
+
+### 11.2. Cách chạy demo
+
+1. Windows: bấm đúp `chay-demo.bat` (cần Python). Trình duyệt tự mở `http://localhost:8000/index.html`. Không có Python: mở thư mục bằng VS Code, dùng extension Live Server.
+2. Có mạng: dùng link GitHub Pages ở đầu phần cập nhật.
+3. Trước khi trình bày: bấm “Đặt lại dữ liệu demo” ở cuối Trang chủ để về trạng thái ban đầu (0 kg, 6 tin demo).
+
+Kịch bản gợi ý: Trang chủ (0 kg, Cách hoạt động) → Đăng tin một món → quay lại Trang chủ thấy tin mới đứng đầu → Danh mục: tìm không dấu, lọc danh mục, lọc khoảng cách → bấm “Xác nhận giao dịch thành công” → Trang chủ thấy số kg tăng.
+
+### 11.3. Kết quả kiểm tra
+
+- PASS 30/30 test Node, PASS 40/40 kiểm tra trình duyệt (`tests/e2e_check.py`, Chrome thật qua `demo-server.py`), xem ảnh chụp desktop/mobile/file://.
+- NOT RUN: chạy `chay-demo.bat` trên Windows thật, GitHub Pages sau khi đẩy code.
+
