@@ -1,35 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="data:,">
-  <title>Đăng tin — Circular Economy Exchange</title>
-  <link rel="stylesheet" href="./assets/css/tokens.css">
-  <link rel="stylesheet" href="./assets/css/layout.css">
-  <link rel="stylesheet" href="./assets/css/post.css">
-  <script src="./assets/js/cee-config.js"></script>
+  <meta name="description" content="Đăng tin đồ cũ muốn tặng, bán hoặc đổi.">
+  <title>Đăng tin | Circular Economy Exchange</title>
+  <link rel="icon" href="./assets/images/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./css/layout.css">
+  <link rel="stylesheet" href="./css/pages.css">
+  <script defer src="./js/data.js"></script>
+  <script defer src="./js/logic/filter.js"></script>
+  <script defer src="./js/logic/listing.js"></script>
+  <script defer src="./js/logic/waste.js"></script>
+  <script defer src="./js/logic/store.js"></script>
+  <script defer src="./js/ui/components.js"></script>
+  <script defer src="./js/ui/post.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
 
   <header class="site-header">
     <div class="site-header__inner page-shell">
-      <a class="brand" href="./index.html" aria-label="Circular Economy Exchange - Trang chủ">
-        <span class="brand__mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" focusable="false">
-            <path d="M25.4 12.2A10.4 10.4 0 0 0 7.2 8.1L5.6 10" />
-            <path d="M5.6 5.2V10h4.8" />
-            <path d="M6.6 19.8a10.4 10.4 0 0 0 18.2 4.1l1.6-1.9" />
-            <path d="M26.4 26.8V22h-4.8" />
-          </svg>
-        </span>
+      <a class="brand" href="./index.html" aria-label="Circular Economy Exchange - về Trang chủ">
+        <img class="brand__logo" src="./assets/images/logo.svg" alt="" width="42" height="42">
         <span class="brand__text">
           <strong>Circular Exchange</strong>
-          <span>TRAO ĐỔI · TÁI SỬ DỤNG</span>
+          <span>SÀN TRAO ĐỔI ĐỒ CŨ &amp; TÁI CHẾ</span>
         </span>
       </a>
-
       <nav class="site-nav" aria-label="Điều hướng chính">
         <a class="site-nav__link" href="./index.html">Trang chủ</a>
         <a class="site-nav__link" href="./category.html">Danh mục sản phẩm</a>
@@ -38,104 +37,121 @@
     </div>
   </header>
 
-  <main id="main-content" class="page">
-    <section class="intro">
-      <h1>Đăng tin đồ cũ</h1>
-      <p>Mô tả món đồ bạn muốn trao đi, bán lại hoặc đổi.</p>
-    </section>
+  <main id="main-content" class="page-shell post-layout">
+    <section class="post-main" aria-labelledby="page-title">
+      <h1 id="page-title" class="page-title">Đăng tin đồ cũ</h1>
+      <p class="page-intro">Mô tả món đồ bạn muốn tặng, bán lại hoặc đổi. Trường có dấu <span class="required" aria-hidden="true">*</span> là bắt buộc.</p>
 
-    <form id="listing-form" class="form" novalidate>
-      <div class="field">
-        <label for="title">Tên sản phẩm</label>
-        <input id="title" name="title" type="text" maxlength="120" autocomplete="off" required aria-describedby="title-error">
-        <p class="error" id="title-error" role="alert"></p>
-      </div>
-
-      <div class="field">
-        <label for="description">Mô tả sản phẩm</label>
-        <textarea id="description" name="description" rows="5" maxlength="1000" required aria-describedby="description-hint description-error"></textarea>
-        <p class="hint" id="description-hint"><span id="description-count">0</span>/1000 ký tự</p>
-        <p class="error" id="description-error" role="alert"></p>
-      </div>
-
-      <div class="field">
-        <label for="condition">Tình trạng</label>
-        <select id="condition" name="condition" required aria-describedby="condition-error">
-          <option value="">Chọn tình trạng</option>
-          <option value="Like new">Like new</option>
-          <option value="Good">Good</option>
-          <option value="Fair">Fair</option>
-        </select>
-        <p class="error" id="condition-error" role="alert"></p>
-      </div>
-
-      <!-- Danh mục: README không liệt kê giá trị danh mục (NEED CONFIRMATION).
-           Danh sách mẫu lấy từ assets/js/cee-config.js; trường ẩn nếu danh sách đó rỗng. -->
-      <div class="field" id="category-field" hidden>
-        <label for="category">Danh mục</label>
-        <select id="category" name="category" aria-describedby="category-error">
-          <option value="">Chọn danh mục</option>
-        </select>
-        <p class="error" id="category-error" role="alert"></p>
-      </div>
-
-      <div class="field">
-        <label for="distance" id="distance-label">Khoảng cách (giả lập)</label>
-        <input id="distance" name="distance" type="number" min="0" step="any" inputmode="decimal" aria-describedby="distance-hint distance-error">
-        <p class="hint" id="distance-hint">Không bắt buộc. Người đăng tự nhập; chưa dùng định vị GPS. Đơn vị và vị trí tham chiếu đang chờ nhóm xác nhận.</p>
-        <p class="error" id="distance-error" role="alert"></p>
-      </div>
-
-      <fieldset class="field" aria-describedby="exchange-error">
-        <legend>Loại hình trao đổi</legend>
-        <div class="choices">
-          <label class="choice">
-            <input type="radio" name="exchangeType" value="Give">
-            <span class="choice-body"><strong>Give</strong><small>Cho đi</small></span>
-          </label>
-          <label class="choice">
-            <input type="radio" name="exchangeType" value="Sell">
-            <span class="choice-body"><strong>Sell</strong><small>Bán lại</small></span>
-          </label>
-          <label class="choice">
-            <input type="radio" name="exchangeType" value="Exchange">
-            <span class="choice-body"><strong>Exchange</strong><small>Trao đổi</small></span>
-          </label>
+      <form id="listing-form" class="form-card" novalidate>
+        <div class="field">
+          <label class="field__label" for="title">Tên sản phẩm <span class="required" aria-hidden="true">*</span></label>
+          <input id="title" name="title" type="text" maxlength="120" autocomplete="off" required aria-describedby="title-error" placeholder="Ví dụ: Quạt bàn mini">
+          <p class="field__error" id="title-error" role="alert"></p>
         </div>
-        <p class="error" id="exchange-error" role="alert"></p>
-      </fieldset>
 
-      <div class="field">
-        <span class="label" id="image-label">Ảnh sản phẩm (giả lập)</span>
-        <div class="image-box">
-          <input id="image" name="image" type="file" accept="image/*" aria-labelledby="image-label" aria-describedby="image-note image-error">
-          <div id="image-preview" class="preview" hidden>
-            <img id="image-preview-img" alt="Xem trước ảnh đã chọn">
-            <div class="preview-meta">
-              <span id="image-name"></span>
-              <button type="button" id="image-clear" class="link-btn">Bỏ ảnh</button>
-            </div>
+        <div class="field">
+          <label class="field__label" for="description">Mô tả sản phẩm <span class="required" aria-hidden="true">*</span></label>
+          <textarea id="description" name="description" rows="4" maxlength="1000" required aria-describedby="description-hint description-error" placeholder="Tình trạng thực tế, lý do trao đổi, món muốn đổi lấy..."></textarea>
+          <p class="field__hint" id="description-hint"><span id="description-count">0</span>/1000 ký tự · tối thiểu 10 ký tự</p>
+          <p class="field__error" id="description-error" role="alert"></p>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label class="field__label" for="category">Danh mục <span class="required" aria-hidden="true">*</span></label>
+            <select id="category" name="category" required aria-describedby="category-error">
+              <option value="">Chọn danh mục</option>
+            </select>
+            <p class="field__error" id="category-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label class="field__label" for="condition">Tình trạng <span class="required" aria-hidden="true">*</span></label>
+            <select id="condition" name="condition" required aria-describedby="condition-error">
+              <option value="">Chọn tình trạng</option>
+            </select>
+            <p class="field__error" id="condition-error" role="alert"></p>
           </div>
         </div>
-        <p class="hint" id="image-note">Chỉ chọn ảnh để xem trước trên máy bạn. Ảnh <strong>không</strong> được tải lên máy chủ và không được lưu trữ trực tuyến.</p>
-        <p class="error" id="image-error" role="alert"></p>
-      </div>
 
-      <div class="actions">
-        <button type="submit" class="primary">Đăng tin</button>
-        <button type="reset" class="secondary" id="reset-btn">Nhập lại</button>
-      </div>
-    </form>
+        <fieldset class="field" id="exchange-group" aria-describedby="exchange-error">
+          <legend class="field__label">Loại hình trao đổi <span class="required" aria-hidden="true">*</span></legend>
+          <div class="choices">
+            <label class="choice">
+              <input type="radio" id="exchange-give" name="exchangeType" value="Give">
+              <span class="choice__body"><strong>Tặng</strong><small>Cho đi miễn phí</small></span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="exchangeType" value="Sell">
+              <span class="choice__body"><strong>Bán</strong><small>Bán lại giá hợp lý</small></span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="exchangeType" value="Exchange">
+              <span class="choice__body"><strong>Đổi</strong><small>Đổi lấy món khác</small></span>
+            </label>
+          </div>
+          <p class="field__error" id="exchange-error" role="alert"></p>
+        </fieldset>
 
-    <section id="result" class="result" role="status" aria-live="polite" tabindex="-1" hidden>
-      <h2>Đã lưu tin đăng</h2>
-      <p id="result-text"></p>
-      <p><a href="./category.html">Xem trong Danh mục sản phẩm</a> · <a href="./index.html">Về Trang chủ</a></p>
-      <p class="hint">Đăng tin chưa được tính vào lượng rác thải giảm thiểu. Chỉ giao dịch được xác nhận thành công mới được ghi nhận.</p>
+        <div class="field">
+          <label class="field__label" for="distance">Khoảng cách tới bạn (<span id="distance-unit">km</span>)</label>
+          <input id="distance" name="distance" type="number" min="0" step="any" inputmode="decimal" aria-describedby="distance-hint distance-error" placeholder="Ví dụ: 2,5">
+          <p class="field__hint" id="distance-hint">Không bắt buộc. Nhập tay (giả lập), chưa dùng định vị GPS.</p>
+          <p class="field__error" id="distance-error" role="alert"></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="image">Ảnh sản phẩm (giả lập)</label>
+          <input id="image" name="image" type="file" accept="image/*" aria-describedby="image-hint image-error">
+          <div id="image-preview" class="image-preview" hidden>
+            <img id="image-preview-img" alt="Xem trước ảnh đã chọn">
+            <div>
+              <p id="image-name" class="image-preview__name"></p>
+              <button type="button" id="image-clear" class="link-button">Bỏ ảnh</button>
+            </div>
+          </div>
+          <p class="field__hint" id="image-hint">JPG, PNG, WEBP tối đa 5 MB. Ảnh chỉ được thu nhỏ và lưu trên trình duyệt này, <strong>không</strong> tải lên máy chủ.</p>
+          <p class="field__error" id="image-error" role="alert"></p>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary">Đăng tin</button>
+          <button type="reset" class="btn btn--ghost">Nhập lại</button>
+        </div>
+      </form>
+
+      <section id="result" class="result-card" tabindex="-1" hidden aria-labelledby="result-title">
+        <h2 id="result-title">🎉 Đăng tin thành công</h2>
+        <p id="result-text"></p>
+        <div id="result-card" class="product-grid product-grid--single" role="list" aria-label="Tin vừa đăng"></div>
+        <p class="result-card__links"><a href="./index.html">Xem trên Trang chủ</a> · <a href="./category.html">Xem trong Danh mục</a></p>
+      </section>
+    </section>
+
+    <aside class="post-side" aria-labelledby="tips-title">
+      <h2 id="tips-title" class="section-title">Mẹo đăng tin</h2>
+      <ul class="tips">
+        <li>Ghi rõ tình trạng thật: <strong>Like new</strong> (như mới), <strong>Good</strong> (tốt), <strong>Fair</strong> (còn dùng được).</li>
+        <li>Chọn <strong>Tặng</strong> nếu muốn cho đi, <strong>Đổi</strong> nếu muốn nhận lại món khác.</li>
+        <li>Đăng tin chưa cộng lượng rác giảm; chỉ <strong>giao dịch thành công</strong> mới được tính.</li>
+      </ul>
+    </aside>
+
+    <section class="my-listings" aria-labelledby="mine-title">
+      <h2 id="mine-title" class="section-title">Tin bạn đã đăng <span id="my-count"></span></h2>
+      <div id="my-listings" class="product-grid" role="list" aria-label="Tin bạn đã đăng"></div>
     </section>
   </main>
 
-  <script src="./assets/js/waste-reduction.js"></script>
-  <script src="./assets/js/post-listing.js"></script>
+  <footer class="site-footer">
+    <div class="page-shell site-footer__inner">
+      <div>
+        <strong>Circular Economy Exchange</strong>
+        <p>Kéo dài vòng đời sản phẩm, giảm rác thải. Đồ án Nhóm 3 – Học phần Thiết kế Web, Đại học Lạc Hồng.</p>
+      </div>
+      <div class="site-footer__side">
+        <p class="site-footer__note">Dữ liệu lưu trên trình duyệt của bạn (localStorage), không gửi lên máy chủ.</p>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
