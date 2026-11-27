@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const f = require('../assets/js/category-filter.js');
+const f = require('../js/logic/filter.js');
 
 // DỮ LIỆU GIẢ chỉ dùng để test.
 const data = [
@@ -43,3 +43,16 @@ test('khoảng cách dạng đối tượng {value, unit, reference}', () => {
   const r = f.filterProducts(objData, { maxDistance: '5' }).map(p => p.id);
   assert.deepStrictEqual(r, [1]);
 });
+
+// Bộ lọc đa năng: tình trạng, loại hình, sắp xếp (dữ liệu giả chỉ để test).
+const multi = [
+  { id: 1, title: 'Nồi', category: 'A', condition: 'Good', exchangeType: 'Sell', distance: { value: 3 }, createdAt: '2026-11-01T00:00:00Z' },
+  { id: 2, title: 'Áo', category: 'B', condition: 'Like new', exchangeType: 'Give', distance: { value: 1 }, createdAt: '2026-11-03T00:00:00Z' },
+  { id: 3, title: 'Kệ', category: 'A', condition: 'Fair', exchangeType: 'Exchange', distance: null, createdAt: '2026-11-02T00:00:00Z' }
+];
+test('lọc theo tình trạng', () => assert.deepStrictEqual(f.filterProducts(multi, { condition: 'Fair' }).map(p => p.id), [3]));
+test('lọc theo loại hình trao đổi', () => assert.deepStrictEqual(f.filterProducts(multi, { exchangeType: 'Give' }).map(p => p.id), [2]));
+test('kết hợp danh mục + tình trạng + loại hình', () => assert.deepStrictEqual(f.filterProducts(multi, { category: 'A', condition: 'Good', exchangeType: 'Sell' }).map(p => p.id), [1]));
+test('sắp xếp mới nhất', () => assert.deepStrictEqual(f.sortProducts(multi, 'newest').map(p => p.id), [2, 3, 1]));
+test('sắp xếp gần nhất, thiếu khoảng cách xếp cuối', () => assert.deepStrictEqual(f.sortProducts(multi, 'nearest').map(p => p.id), [2, 1, 3]));
+test('sortProducts không sửa mảng gốc', () => { f.sortProducts(multi, 'nearest'); assert.deepStrictEqual(multi.map(p => p.id), [1, 2, 3]); });

@@ -3,40 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Tìm kiếm và lọc đồ cũ theo danh mục, khoảng cách - Circular Economy Exchange.">
-  <link rel="icon" href="data:,">
+  <meta name="description" content="Tìm kiếm và lọc đồ cũ theo danh mục, tình trạng, loại hình trao đổi và khoảng cách.">
   <title>Danh mục sản phẩm | Circular Economy Exchange</title>
-  <link rel="stylesheet" href="./assets/css/tokens.css">
-  <link rel="stylesheet" href="./assets/css/layout.css">
-  <link rel="stylesheet" href="./assets/css/product-grid.css">
-  <link rel="stylesheet" href="./assets/css/category.css">
-  <script src="./assets/js/cee-config.js"></script>
-  <script src="./assets/js/waste-reduction.js"></script>
-  <script src="./assets/js/post-listing.js"></script>
-  <script src="./assets/js/cee-data.js"></script>
-  <script src="./assets/js/category-filter.js"></script>
-  <script type="module" src="./assets/js/category-page.js"></script>
+  <link rel="icon" href="./assets/images/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./css/layout.css">
+  <link rel="stylesheet" href="./css/pages.css">
+  <script defer src="./js/data.js"></script>
+  <script defer src="./js/logic/filter.js"></script>
+  <script defer src="./js/logic/listing.js"></script>
+  <script defer src="./js/logic/waste.js"></script>
+  <script defer src="./js/logic/store.js"></script>
+  <script defer src="./js/ui/components.js"></script>
+  <script defer src="./js/ui/category.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
 
   <header class="site-header">
     <div class="site-header__inner page-shell">
-      <a class="brand" href="./index.html" aria-label="Circular Economy Exchange - Trang chủ">
-        <span class="brand__mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" focusable="false">
-            <path d="M25.4 12.2A10.4 10.4 0 0 0 7.2 8.1L5.6 10" />
-            <path d="M5.6 5.2V10h4.8" />
-            <path d="M6.6 19.8a10.4 10.4 0 0 0 18.2 4.1l1.6-1.9" />
-            <path d="M26.4 26.8V22h-4.8" />
-          </svg>
-        </span>
+      <a class="brand" href="./index.html" aria-label="Circular Economy Exchange - về Trang chủ">
+        <img class="brand__logo" src="./assets/images/logo.svg" alt="" width="42" height="42">
         <span class="brand__text">
           <strong>Circular Exchange</strong>
-          <span>TRAO ĐỔI · TÁI SỬ DỤNG</span>
+          <span>SÀN TRAO ĐỔI ĐỒ CŨ &amp; TÁI CHẾ</span>
         </span>
       </a>
-
       <nav class="site-nav" aria-label="Điều hướng chính">
         <a class="site-nav__link" href="./index.html">Trang chủ</a>
         <a class="site-nav__link site-nav__link--active" href="./category.html" aria-current="page">Danh mục sản phẩm</a>
@@ -45,39 +37,63 @@
     </div>
   </header>
 
-  <main id="main-content" class="page-shell category-page">
-    <div class="category-heading">
-      <h1 class="page-title">Danh mục sản phẩm</h1>
-      <p class="page-intro">Tìm kiếm và lọc đồ cũ theo danh mục hoặc khoảng cách.</p>
-    </div>
+  <main id="main-content" class="page-shell">
+    <section class="page-heading" aria-labelledby="page-title">
+      <h1 id="page-title" class="page-title">Danh mục sản phẩm</h1>
+      <p class="page-intro">Tìm kiếm và lọc đồ cũ theo nhiều tiêu chí. Kết quả cập nhật ngay khi bạn gõ.</p>
+    </section>
 
-    <form id="filter-form" class="category-filters" role="search">
-      <label>
-        Tìm kiếm
-        <input type="search" id="search-input" placeholder="Tên hoặc mô tả sản phẩm">
-      </label>
-      <label>
-        Danh mục
-        <select id="category-select">
-          <option value="">Tất cả danh mục</option>
-        </select>
-      </label>
-      <label>
-        <span id="distance-label">Khoảng cách tối đa</span>
-        <input type="number" id="distance-input" min="0" step="any" placeholder="Không giới hạn">
-      </label>
-    </form>
+    <section aria-label="Tìm kiếm và bộ lọc">
+      <form id="filter-form" class="filters" role="search">
+        <label class="field filters__search">
+          <span class="field__label">Từ khóa</span>
+          <input type="search" id="search-input" placeholder="Tên hoặc mô tả, gõ không dấu cũng được" autocomplete="off">
+        </label>
+        <label class="field">
+          <span class="field__label">Danh mục</span>
+          <select id="category-select"><option value="">Tất cả danh mục</option></select>
+        </label>
+        <label class="field">
+          <span class="field__label">Tình trạng</span>
+          <select id="condition-select"><option value="">Mọi tình trạng</option></select>
+        </label>
+        <label class="field">
+          <span class="field__label">Loại hình</span>
+          <select id="exchange-select"><option value="">Tặng, Bán và Đổi</option></select>
+        </label>
+        <label class="field">
+          <span class="field__label" id="distance-label">Khoảng cách tối đa</span>
+          <input type="number" id="distance-input" min="0" step="any" inputmode="decimal" placeholder="Không giới hạn">
+        </label>
+        <label class="field">
+          <span class="field__label">Sắp xếp</span>
+          <select id="sort-select">
+            <option value="newest">Mới đăng nhất</option>
+            <option value="nearest">Gần tôi nhất</option>
+          </select>
+        </label>
+        <div class="filters__actions">
+          <button type="reset" class="btn btn--ghost">Xóa bộ lọc</button>
+        </div>
+      </form>
+    </section>
 
-    <p id="result-status" class="result-status" role="status" aria-live="polite"></p>
-
-    <!-- Product Grid dùng chung của AI 1 (assets/js/product-grid.js). AI 2 không tự dựng card. -->
-    <div id="product-grid" class="product-grid" role="list" aria-label="Kết quả tìm kiếm" aria-busy="false"></div>
+    <section class="products-section" aria-labelledby="result-title">
+      <h2 id="result-title" class="visually-hidden">Kết quả</h2>
+      <p id="result-status" class="result-status" role="status" aria-live="polite"></p>
+      <div id="product-grid" class="product-grid" role="list" aria-label="Kết quả tìm kiếm"></div>
+    </section>
   </main>
 
   <footer class="site-footer">
     <div class="page-shell site-footer__inner">
-      <span>Circular Economy Exchange</span>
-      <span>Kéo dài vòng đời sản phẩm, giảm lãng phí.</span>
+      <div>
+        <strong>Circular Economy Exchange</strong>
+        <p>Kéo dài vòng đời sản phẩm, giảm rác thải. Đồ án Nhóm 3 – Học phần Thiết kế Web, Đại học Lạc Hồng.</p>
+      </div>
+      <div class="site-footer__side">
+        <p class="site-footer__note">Dữ liệu lưu trên trình duyệt của bạn (localStorage), không gửi lên máy chủ.</p>
+      </div>
     </div>
   </footer>
 </body>

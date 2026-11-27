@@ -1,136 +1,159 @@
 # Kiểm thử end-to-end bằng Chrome thật (Playwright cho Python).
-# Cách chạy: (1) python3 demo-server.py ở thư mục gốc repo; (2) python3 tests/e2e_check.py
-# Biến môi trường: CEE_BASE (mặc định http://127.0.0.1:8765), CEE_CHROME (đường dẫn Chrome; bỏ trống = Chromium của Playwright).
-import os, sys, json, struct, zlib, tempfile
+# Chạy cả 2 cách mở website: qua máy chủ (http://) và mở trực tiếp file HTML (file://).
+#
+#   pip install playwright && playwright install chromium
+#   python -m http.server 8765            # terminal 1, ở thư mục gốc repo
+#   python tests/e2e_check.py             # terminal 2
+#
+# Biến môi trường: CEE_HTTP (mặc định http://127.0.0.1:8765), CEE_CHROME (đường dẫn Chrome, tùy chọn).
+import os, sys, struct, zlib, tempfile, pathlib
 from playwright.sync_api import sync_playwright
-BASE=os.environ.get('CEE_BASE','http://127.0.0.1:8000')
-CHROME=os.environ.get('CEE_CHROME') or None
-SHOTS=tempfile.gettempdir()
 
-def make_png(path, w=8, h=8, rgb=(60,140,100)):
-    raw=b''.join(b'\x00'+bytes(rgb)*w for _ in range(h))
-    def ch(t,d):
-        c=struct.pack('>I',len(d))+t+d
-        return c+struct.pack('>I',zlib.crc32(t+d)&0xffffffff)
-    open(path,'wb').write(b'\x89PNG\r\n\x1a\n'+ch(b'IHDR',struct.pack('>IIBBBBB',w,h,8,2,0,0,0))+ch(b'IDAT',zlib.compress(raw))+ch(b'IEND',b''))
-TEST_PNG=os.path.join(SHOTS,'cee_test.png'); make_png(TEST_PNG)
-results=[]
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+HTTP = os.environ.get('CEE_HTTP', 'http://127.0.0.1:8765')
+CHROME = os.environ.get('CEE_CHROME') or None
+TMP = pathlib.Path(tempfile.gettempdir())
+results = []
+
 def check(name, cond, extra=''):
-    results.append((name, bool(cond), extra)); print(('PASS' if cond else 'FAIL'), name, extra)
+    results.append((name, bool(cond)))
+    print(('PASS' if cond else 'FAIL'), name, extra if not cond else '')
 
-with sync_playwright() as p:
-    b=p.chromium.launch(executable_path=CHROME, args=['--no-sandbox'])
-    ctx=b.new_context(viewport={'width':1280,'height':900})
-    page=ctx.new_page()
-    errors=[]; external=[]
+def make_png(path, w=40, h=30):
+    raw = b''.join(b'\x00' + bytes((60, 140, 100)) * w for _ in range(h))
+    def ch(t, d):
+        c = struct.pack('>I', len(d)) + t + d
+        return c + struct.pack('>I', zlib.crc32(t + d) & 0xffffffff)
+    path.write_bytes(b'\x89PNG\r\n\x1a\n' + ch(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0)) + ch(b'IDAT', zlib.compress(raw)) + ch(b'IEND', b''))
+
+PNG = TMP / 'cee_test.png'; make_png(PNG)
+TXT = TMP / 'cee_test.txt'; TXT.write_text('khong phai anh')
+
+def run(base, mode, browser):
+    print(f'\n===== {mode}: {base} =====')
+    ctx = browser.new_context(viewport={'width': 1280, 'height': 900})
+    page = ctx.new_page()
+    errors, external = [], []
     page.on('pageerror', lambda e: errors.append(str(e)))
-    page.on('console', lambda m: errors.append(m.text) if m.type=='error' else None)
-    page.on('request', lambda r: external.append(r.url) if not (r.url.startswith(BASE) or r.url.startswith('blob:')) else None)
+    page.on('console', lambda m: errors.append(m.text) if m.type == 'error' else None)
+    page.on('request', lambda r: external.append(r.url) if not (r.url.startswith(base) or r.url.startswith(('data:', 'blob:'))) else None)
+    url = lambda name, q='': f'{base}/{name}.html{q}'
+    T = lambda name: f'[{mode}] {name}'
 
-    # 1. Trang chủ lần đầu: chỉ có tin demo, chưa có giao dịch
-    page.goto(BASE+'/index.html'); page.wait_for_selector('.product-card')
-    check('Home: hiển thị 6 tin demo, mỗi thẻ có nhãn "Tin demo"', page.locator('.product-card').count()==6 and page.locator('.product-card__demo').count()==6)
-    check('Home: thống kê = 0 kg, ghi rõ chưa có giao dịch và là giả định', page.inner_text('#community-waste-value').strip()=='0 kg' and 'Chưa có giao dịch' in page.inner_text('#community-waste-note') and 'Giả định' in page.inner_text('#community-waste-note'))
-    check('Home: 3 link điều hướng + mục Cách hoạt động 3 bước', page.locator('.site-nav__link').count()==3 and page.locator('.how-step').count()==3)
-    check('Home: nhãn loại hình có tiếng Việt (Tặng/Bán/Đổi)', any(t in page.inner_text('#latest-products') for t in ['Give · Tặng','Sell · Bán','Exchange · Đổi']))
-    check('Home: thẻ hiện khoảng cách', page.locator('.product-card__distance').count()==6)
+    # 1. Trang chủ ban đầu
+    page.goto(url('index')); page.wait_for_selector('.product-card')
+    check(T('Home: 8 mặt hàng mới, đều có nhãn "Tin demo"'), page.locator('#latest-products .product-card').count() == 8 and page.locator('.badge--demo').count() == 8)
+    check(T('Home: widget rác thải 0 kg, 0 giao dịch, 8 món chờ trao đổi'), page.inner_text('#stat-waste') == '0 kg' and page.inner_text('#stat-transactions') == '0' and page.inner_text('#stat-available') == '8')
+    labels = set(page.eval_on_selector_all('#latest-products .badge', 'b => b.map(x => x.textContent)'))
+    check(T('Home: badge tình trạng (Like new/Good/Fair) và loại hình (Tặng/Bán/Đổi)'), {'Like new', 'Good', 'Fair', 'Tặng', 'Bán', 'Đổi'} <= labels, str(labels))
+    check(T('Home: semantic header/nav/main/section/article/footer'), page.evaluate("['header','nav','main','section','article','footer'].every(t => document.querySelector(t))"))
+    check(T('Home: danh mục nổi bật có lối tắt'), page.locator('#category-links .chip').count() >= 4)
 
-    # 2. Đăng tin
-    page.goto(BASE+'/post.html')
-    cats=page.eval_on_selector_all('#category option','o=>o.map(x=>x.value)')
-    check('Post: ô Danh mục hiển thị, lấy từ cấu hình', len(cats)==7 and cats[0]=='')
-    types=page.eval_on_selector_all('input[name=exchangeType]','i=>i.map(x=>x.value)')
-    check('Post: đúng 3 loại Give/Sell/Exchange', types==['Give','Sell','Exchange'])
-    conds=page.eval_on_selector_all('#condition option','o=>o.map(x=>x.value).filter(Boolean)')
-    check('Post: đúng 3 tình trạng', conds==['Like new','Good','Fair'])
-    page.click('button.primary')
-    errs=[t for t in page.eval_on_selector_all('.error','e=>e.map(x=>x.textContent)') if t]
-    check('Post: gửi form rỗng báo 5 lỗi (tên, mô tả, tình trạng, danh mục, loại hình)', len(errs)==5, str(len(errs)))
-    check('Post: chưa lưu gì khi form lỗi', page.evaluate("JSON.parse(localStorage.getItem('cee.listings.v1')||'[]').length")==0)
-    page.fill('#distance','-3'); page.click('button.primary')
-    check('Post: khoảng cách âm bị báo lỗi', 'không âm' in page.inner_text('#distance-error'))
+    # 2. Đăng tin: validation
+    page.goto(url('post'))
+    page.click('button[type=submit]')
+    errs = [t for t in page.eval_on_selector_all('.field__error', 'e => e.map(x => x.textContent)') if t]
+    check(T('Post: gửi form rỗng báo 5 lỗi bắt buộc'), len(errs) == 5, str(errs))
+    check(T('Post: ô lỗi được tô đỏ (aria-invalid) và focus vào ô đầu tiên'), page.get_attribute('#title', 'aria-invalid') == 'true' and page.evaluate('document.activeElement.id') == 'title')
+    check(T('Post: không lưu gì khi form lỗi'), page.evaluate("JSON.parse(localStorage.getItem('cee.listings.v1') || '[]').length") == 0)
+    page.fill('#title', 'ab'); page.fill('#description', 'ngắn'); page.fill('#distance', '150')
+    check(T('Post: báo lỗi định dạng ngay khi gõ (tên, mô tả, khoảng cách)'), 'ít nhất 3' in page.inner_text('#title-error') and 'ít nhất 10' in page.inner_text('#description-error') and 'từ 0 đến 100' in page.inner_text('#distance-error'))
+    page.fill('#title', 'Bàn gỗ sồi')
+    check(T('Post: lỗi biến mất khi sửa đúng'), page.inner_text('#title-error') == '' and page.get_attribute('#title', 'aria-invalid') is None)
+    page.set_input_files('#image', str(TXT))
+    check(T('Post: file không phải ảnh bị từ chối'), 'file ảnh' in page.inner_text('#image-error'))
 
-    def post(title, desc, cond, cat, typ, dist=None, img=None):
-        page.goto(BASE+'/post.html')
-        page.fill('#title',title); page.fill('#description',desc)
-        page.select_option('#condition',cond); page.select_option('#category',cat)
+    def post(title, desc, cat, cond, typ, dist=None, img=False):
+        page.goto(url('post'))
+        page.fill('#title', title); page.fill('#description', desc)
+        page.select_option('#category', cat); page.select_option('#condition', cond)
         page.check(f'input[name=exchangeType][value={typ}]')
-        if dist is not None: page.fill('#distance',str(dist))
-        if img: page.set_input_files('#image',img)
-        page.click('button.primary')
+        if dist is not None: page.fill('#distance', str(dist))
+        if img:
+            page.set_input_files('#image', str(PNG))
+            page.wait_for_selector('#image-preview:not([hidden])')
+        page.click('button[type=submit]')
         page.wait_for_selector('#result:not([hidden])')
-    n0=len(external)
-    post('Bàn gỗ sồi','Bàn làm việc còn chắc chắn','Good','Nội thất','Sell',2,TEST_PNG)
-    check('Post: chọn ảnh giả lập, không có request ra ngoài', len(external)==n0)
-    rec=page.evaluate("JSON.parse(localStorage.getItem('cee.listings.v1'))[0]")
-    check('Post: ảnh chỉ lưu metadata giả lập (mock, uploaded=false)', rec['image']['mock'] is True and rec['image']['uploaded'] is False and 'data' not in rec['image'])
-    check('Post: lưu khoảng cách dạng số', rec.get('distance')==2)
-    page.wait_for_timeout(1100)
-    post('Ghế xoay văn phòng','Ghế ít dùng, tựa lưng lưới','Like new','Nội thất','Give',8)
-    page.wait_for_timeout(1100)
-    post('Sách lập trình Python','Giáo trình cũ, có ghi chú bút chì','Fair','Sách & văn phòng phẩm','Exchange')
-    check('Post: đăng tin KHÔNG ghi vào sổ rác thải', page.evaluate("localStorage.getItem('cee.wasteLedger.v1')")is None)
 
-    # 3. Trang chủ sau khi đăng: tin mới nhất lên đầu, tối đa 6 thẻ
-    page.goto(BASE+'/index.html'); page.wait_for_selector('.product-card')
-    titles=page.eval_on_selector_all('.product-card__title','e=>e.map(x=>x.textContent)')
-    check('Home: 3 tin vừa đăng đứng đầu, mới nhất trước', titles[:3]==['Sách lập trình Python','Ghế xoay văn phòng','Bàn gỗ sồi'], str(titles))
-    check('Home: giới hạn 6 thẻ', len(titles)==6)
-    badges=page.eval_on_selector_all('.condition-badge','e=>e.map(x=>x.textContent)')
-    check('Home: badge đúng nhãn', badges[:3]==['Fair','Like new','Good'], str(badges))
-    check('Home: tin tự đăng không có nhãn demo', page.locator('.product-card').nth(0).locator('.product-card__demo').count()==0)
+    post('Bàn gỗ sồi', 'Bàn làm việc còn chắc chắn, mặt gỗ đẹp', 'Nội thất', 'Good', 'Sell', 2, img=True)
+    check(T('Post: xem trước ảnh và thẻ tin vừa đăng hiện ngay kèm ảnh'), page.locator('#result-card .product-card__image').count() == 1)
+    rec = page.evaluate("JSON.parse(localStorage.getItem('cee.listings.v1'))[0]")
+    check(T('Post: ảnh giả lập uploaded=false, chỉ lưu ảnh thu nhỏ'), rec['image']['uploaded'] is False and rec['image']['thumbnail'].startswith('data:image/jpeg'))
+    check(T('Post: "Tin bạn đã đăng" cập nhật'), page.locator('#my-listings .product-card').count() == 1)
+    check(T('Post: đăng tin không cộng rác thải'), page.evaluate("localStorage.getItem('cee.wasteLedger.v1')") is None)
+    page.wait_for_timeout(20)
+    post('Ghế xoay văn phòng', 'Ghế ít dùng, tựa lưng lưới thoáng', 'Nội thất', 'Like new', 'Give', 8)
+    page.wait_for_timeout(20)
+    post('Sách lập trình Python', 'Giáo trình cũ, có ghi chú bút chì', 'Sách & văn phòng phẩm', 'Fair', 'Exchange')
 
-    # 4. Danh mục: 3 tin đăng + 6 tin demo
-    page.goto(BASE+'/category.html'); page.wait_for_selector('.product-card')
-    check('Category: hiển thị 9 sản phẩm', page.locator('.product-card').count()==9)
-    opts=page.eval_on_selector_all('#category-select option','o=>o.map(x=>x.value)')
-    check('Category: 5 danh mục lấy từ dữ liệu', len(opts)==6 and opts[0]=='', str(opts))
-    page.fill('#search-input','ghe xoay')
-    check('Category: tìm không dấu "ghe xoay" -> 1', page.locator('.product-card').count()==1)
-    page.fill('#search-input','')
-    page.select_option('#category-select','Nội thất')
-    check('Category: Nội thất -> 3', page.locator('.product-card').count()==3)
-    page.fill('#distance-input','5')
-    check('Category: Nội thất + ≤5 km -> Bàn gỗ sồi', page.locator('.product-card').count()==1 and 'Bàn gỗ' in page.inner_text('.product-card__title'))
-    page.fill('#search-input','xyz')
-    check('Category: không có kết quả -> thông báo rỗng', page.locator('.product-card').count()==0 and 'Không có sản phẩm phù hợp' in page.inner_text('#result-status'))
-    page.fill('#search-input',''); page.select_option('#category-select',''); page.fill('#distance-input','5')
-    check('Category: chỉ lọc ≤5 km -> 4', page.locator('.product-card').count()==4)
-    page.press('#search-input','Enter')
-    check('Category: Enter không tải lại trang', page.url.endswith('/category.html'))
-    check('Category: nhãn khoảng cách có đơn vị', 'km' in page.inner_text('#distance-label'))
+    # 3. Trang chủ sau khi đăng
+    page.goto(url('index')); page.wait_for_selector('.product-card')
+    titles = page.eval_on_selector_all('#latest-products .product-card__title', 'e => e.map(x => x.textContent)')
+    check(T('Home: tin mới đăng đứng đầu'), titles[:3] == ['Sách lập trình Python', 'Ghế xoay văn phòng', 'Bàn gỗ sồi'], str(titles))
+    check(T('Home: 11 món chờ trao đổi'), page.inner_text('#stat-available') == '11')
 
-    # 5. Giao dịch thành công -> cộng ước tính (Nội thất 12 kg theo giả định)
-    page.fill('#distance-input',''); page.fill('#search-input','ban go soi')
-    page.click('.product-card__confirm')
-    check('Transaction: thẻ chuyển sang "Đã giao dịch thành công" kèm ước tính', 'Đã giao dịch thành công' in page.inner_text('.product-card__done') and '12 kg' in page.inner_text('.product-card__done'))
-    check('Transaction: không còn nút xác nhận trên thẻ đó', page.locator('.product-card__confirm').count()==0)
-    r1=page.evaluate("CEEWasteReduction.recordConfirmedTransaction({transactionId:'t1',listingId:'x',exchangeType:'Give',transactionConfirmed:false,inputs:{}}).status")
-    check('Waste: giao dịch chưa xác nhận -> không ghi', r1=='REJECTED_NOT_CONFIRMED')
-    page.goto(BASE+'/index.html'); page.wait_for_selector('.product-card')
-    check('Home: thống kê = 12 kg từ 1 giao dịch', page.inner_text('#community-waste-value').strip()=='12 kg' and '1 giao dịch' in page.inner_text('#community-waste-note'))
-    page.locator('.product-card', has_text='Quạt bàn mini').locator('.product-card__confirm').click()
-    page.wait_for_function("document.querySelector('#community-waste-value').textContent.trim()==='13,5 kg'")
-    check('Home: xác nhận thêm ngay trên Trang chủ -> 13,5 kg, tự cập nhật', True)
-    page.reload(); page.wait_for_selector('.product-card')
-    check('Home: tải lại vẫn giữ 2 giao dịch, không cộng trùng', page.inner_text('#community-waste-value').strip()=='13,5 kg' and page.locator('.product-card__done').count()>=1)
+    # 4. Danh mục: tìm kiếm + lọc đa năng
+    page.goto(url('category')); page.wait_for_selector('.product-card')
+    n = lambda: page.locator('#product-grid .product-card').count()
+    check(T('Category: hiển thị đủ 11 sản phẩm'), n() == 11)
+    page.fill('#search-input', 'ghe xoay'); check(T('Category: tìm không dấu real-time'), n() == 1)
+    page.fill('#search-input', '')
+    page.select_option('#condition-select', 'Fair'); check(T('Category: lọc tình trạng Fair -> 3'), n() == 3)
+    page.select_option('#condition-select', '')
+    page.select_option('#exchange-select', 'Give'); check(T('Category: lọc loại hình Tặng -> 4'), n() == 4)
+    page.select_option('#exchange-select', '')
+    page.select_option('#category-select', 'Nội thất'); check(T('Category: lọc danh mục Nội thất -> 4'), n() == 4)
+    page.fill('#distance-input', '5'); check(T('Category: + khoảng cách ≤5 km -> 2'), n() == 2)
+    page.fill('#search-input', 'xyz'); check(T('Category: không có kết quả -> thông báo'), n() == 0 and 'Không có sản phẩm phù hợp' in page.inner_text('#result-status'))
+    page.click('button[type=reset]'); page.wait_for_timeout(50)
+    check(T('Category: nút Xóa bộ lọc trả về 11'), n() == 11)
+    page.select_option('#sort-select', 'nearest')
+    check(T('Category: sắp xếp gần nhất'), page.inner_text('#product-grid .product-card__title') == 'Bộ giáo trình Tin học đại cương')
+    page.goto(url('category', '?category=' + 'Nội thất')); page.wait_for_selector('.product-card')
+    check(T('Category: mở sẵn bộ lọc qua lối tắt Trang chủ'), n() == 4)
 
-    # 5b. Đặt lại dữ liệu demo
-    page.once('dialog', lambda d: d.accept())
-    page.click('#reset-demo')
-    page.wait_for_function("document.querySelector('#community-waste-value').textContent.trim()==='0 kg'")
-    check('Reset: về 0 kg và chỉ còn 6 tin demo', page.locator('.product-card__demo').count()==6 and page.evaluate("localStorage.getItem('cee.listings.v1')") is None)
+    # 5. Giao dịch thành công -> rác thải giảm (real-time)
+    home = ctx.new_page(); home.on('pageerror', lambda e: errors.append(str(e)))
+    home.goto(url('index')); home.wait_for_selector('.product-card')
+    page.fill('#search-input', 'ban go soi')
+    page.click('#product-grid .btn--outline')
+    check(T('Transaction: thẻ hiện "Đã giao dịch" kèm 12 kg ước tính + thông báo'), '12 kg' in page.inner_text('.product-card__done') and 'Đã ghi nhận' in page.inner_text('#toast'))
+    home.wait_for_function("document.getElementById('stat-waste').textContent === '12 kg'", timeout=5000)
+    check(T('Transaction: Trang chủ ở tab khác tự cập nhật 12 kg, không cần tải lại'), home.inner_text('#stat-transactions') == '1')
+    home.locator('#latest-products .product-card', has_text='Sách lập trình Python').locator('.btn--outline').click()
+    check(T('Transaction: xác nhận ngay trên Trang chủ -> 13 kg, biểu đồ 2 danh mục'), home.inner_text('#stat-waste') == '13 kg' and home.locator('.breakdown__row').count() == 2)
+    r = home.evaluate("CEE.waste.recordConfirmedTransaction({transactionId:'x',listingId:'x',exchangeType:'Give',transactionConfirmed:false,inputs:{}}).status")
+    check(T('Transaction: giao dịch chưa xác nhận bị từ chối'), r == 'REJECTED_NOT_CONFIRMED')
+    home.reload(); home.wait_for_selector('.product-card')
+    check(T('Transaction: tải lại vẫn 13 kg, không cộng trùng'), home.inner_text('#stat-waste') == '13 kg' and home.inner_text('#stat-available') == '9')
 
-    # 6. Responsive + ảnh chụp
-    for name in ['index','category','post']:
-        pg=ctx.new_page(); pg.set_viewport_size({'width':375,'height':800}); pg.goto(f'{BASE}/{name}.html'); pg.wait_for_timeout(400)
-        check(f'Mobile 375px: {name} không cuộn ngang', pg.evaluate('document.documentElement.scrollWidth<=innerWidth'))
-        pg.screenshot(path=os.path.join(SHOTS,f'cee_shot_{name}_m.png'), full_page=True); pg.close()
-    for name in ['index','category','post']:
-        pg=ctx.new_page(); pg.goto(f'{BASE}/{name}.html'); pg.wait_for_timeout(400)
-        pg.screenshot(path=os.path.join(SHOTS,f'cee_shot_{name}.png'), full_page=True); pg.close()
-    check('Không có lỗi console/JS', errors==[], str(errors))
-    check('Không có request ra ngoài localhost', external==[], str(external))
-    b.close()
-bad=[r for r in results if not r[1]]
-print(f'\n{len(results)-len(bad)}/{len(results)} PASS'); sys.exit(1 if bad else 0)
+    # 6. Đặt lại dữ liệu demo
+    home.once('dialog', lambda d: d.accept())
+    home.click('#reset-demo')
+    home.wait_for_function("document.getElementById('stat-waste').textContent === '0 kg'")
+    check(T('Reset: về 0 kg, còn 8 tin demo'), home.inner_text('#stat-available') == '8')
+
+    # 7. Responsive + ảnh chụp
+    for w, h, tag in [(375, 800, 'mobile'), (768, 1000, 'tablet'), (1280, 900, 'desktop')]:
+        for name in ['index', 'category', 'post']:
+            p = ctx.new_page(); p.set_viewport_size({'width': w, 'height': h})
+            p.on('pageerror', lambda e: errors.append(str(e)))
+            p.goto(url(name)); p.wait_for_timeout(200)
+            check(T(f'Responsive {tag} {w}px: {name} không cuộn ngang'), p.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            if mode == 'http':
+                p.screenshot(path=str(TMP / f'cee_{name}_{tag}.png'), full_page=True)
+            p.close()
+
+    check(T('Console sạch: 0 lỗi'), errors == [], str(errors))
+    check(T('Không có request ra ngoài'), external == [], str(external))
+    ctx.close()
+
+with sync_playwright() as pw:
+    browser = pw.chromium.launch(executable_path=CHROME, args=['--no-sandbox'])
+    run(HTTP, 'http', browser)
+    run(ROOT.as_uri(), 'file', browser)
+    browser.close()
+
+bad = [r for r in results if not r[1]]
+print(f'\n{len(results) - len(bad)}/{len(results)} PASS')
+sys.exit(1 if bad else 0)

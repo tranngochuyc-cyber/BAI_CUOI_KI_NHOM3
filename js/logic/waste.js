@@ -1,30 +1,26 @@
 /*!
- * waste-reduction.js — AI 3 / Circular Economy Exchange
- *
- * Module tính “Lượng rác thải đã giảm thiểu”.
- *
- * ┌────────────────────────────────────────────────────────────────────────┐
- * │ TRẠNG THÁI: CÔNG THỨC CHƯA ĐƯỢC XÁC NHẬN — NEED CONFIRMATION           │
- * │ README không cung cấp công thức, đơn vị, khối lượng hay hệ số quy đổi. │
- * │ Module này KHÔNG chứa bất kỳ hệ số hay số liệu nào được tự đặt.        │
- * │ Cho tới khi WASTE_RULE bên dưới được điền, tổng trả về luôn là null.   │
- * └────────────────────────────────────────────────────────────────────────┘
+ * logic/waste.js — Tính "Lượng rác thải đã giảm thiểu" (phần AI 3 — Lê Văn Khoa).
  *
  * Quy tắc kích hoạt:
  *  - Chỉ ghi nhận khi giao dịch mang tín hiệu xác nhận thành công
- *    (tx[CONFIRM_FIELD] === true). Đăng tin KHÔNG kích hoạt tính toán.
- *  - Module không tạo trang thanh toán / quy trình giao dịch. Nơi nào trong
- *    dự án xác nhận giao dịch thì gọi recordConfirmedTransaction(...).
+ *    (tx.transactionConfirmed === true). Đăng tin KHÔNG kích hoạt tính toán.
+ *  - Chống ghi trùng theo transactionId.
  *
- * Dùng được cả trong trình duyệt (window.CEEWasteReduction) lẫn Node (require).
+ * Công thức (giả định minh họa của nhóm, lấy từ js/data.js):
+ *    lượng rác giảm của 1 giao dịch = khối lượng ước tính (kg) theo danh mục món đồ
+ *    tổng cộng đồng = tổng các giao dịch thành công.
+ * Khi chạy trong Node (không có data.js) quy tắc ở trạng thái chưa xác nhận để kiểm thử.
+ *
+ * Dùng được cả trong trình duyệt (window.CEE.waste) lẫn Node (require).
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory();
+    module.exports = factory(root);
   } else {
-    root.CEEWasteReduction = factory();
+    root.CEE = root.CEE || {};
+    root.CEE.waste = factory(root);
   }
-})(typeof self !== 'undefined' ? self : this, function () {
+})(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
 
   /* ======================================================================
@@ -42,19 +38,28 @@
   // NEED CONFIRMATION: khóa lưu sổ giao dịch dùng chung giữa các trang.
   // README không quy định backend/CSDL. localStorage chỉ là lưu cục bộ trên
   // trình duyệt cho bản demo tĩnh, không phải máy chủ.
-  var DEFAULT_STORAGE_KEY = 'cee.wasteLedger.v1';
+  var DEFAULT_STORAGE_KEY = (root && root.CEE && root.CEE.data && root.CEE.data.storageKeys.ledger) || 'cee.wasteLedger.v1';
 
-  // NEED CONFIRMATION: công thức + đơn vị + dữ liệu đầu vào bắt buộc.
-  //   confirmed      : đặt true CHỈ sau khi có xác nhận bằng văn bản/lời của giảng viên/nhóm
-  //   unit           : đơn vị đo (ví dụ do nhóm chốt) — hiện chưa có
-  //   requiredInputs : danh sách tên trường bắt buộc trong tx.inputs — hiện chưa có
-  //   compute        : function (inputs) -> number — hiện chưa có
-  var WASTE_RULE = {
-    confirmed: false,
-    unit: null,
-    requiredInputs: null,
-    compute: null
-  };
+  // Quy tắc tính:
+  //   confirmed      : quy tắc đã đủ trường để tính
+  //   unit           : đơn vị đo
+  //   requiredInputs : các trường bắt buộc trong tx.inputs
+  //   compute        : function (inputs) -> number
+  // Lấy từ js/data.js (giả định minh họa của nhóm). Không có data.js => chưa xác nhận.
+  var UNCONFIRMED_RULE = { confirmed: false, unit: null, requiredInputs: null, compute: null };
+
+  function ruleFromData() {
+    var data = root && root.CEE && root.CEE.data;
+    if (!data || typeof data.kgForCategory !== 'function') return UNCONFIRMED_RULE;
+    return {
+      confirmed: true,
+      unit: data.wasteEstimate.unit,
+      requiredInputs: ['category'],
+      compute: function (inputs) { return data.kgForCategory(inputs.category); }
+    };
+  }
+
+  var WASTE_RULE = ruleFromData();
 
   /* ======================================================================
    * Lưu trữ: localStorage nếu dùng được, ngược lại bộ nhớ tạm
